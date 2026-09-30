@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лаборатория — MsBinaryLily</title>
+<meta name="description" content="Эксперименты и прототипы: Horizon Chamber, инструменты агентной разработки, очередь опытов.">
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-ru="к содержимому" data-en="skip to content">к содержимому</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8 21 7v10l-9 5.2L3 17V7z" fill="none" stroke="#00e5ff" stroke-width="1.4"/><path d="M12 6.6 16.6 9.2v4.6L12 16.4l-4.6-2.6V9.2z" fill="#7c4dff"/></svg>
+      <span class="brand-name">Ms<b>Binary</b>Lily</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span data-ru="меню" data-en="menu">меню</span>
+    </button>
+    <nav class="nav" id="site-nav" aria-label="Main">
+      <a href="index.html" data-ru="главная" data-en="home">главная</a>
+      <a href="projects.html" data-ru="проекты" data-en="projects">проекты</a>
+      <a href="laboratory.html" data-ru="лаборатория" data-en="laboratory">лаборатория</a>
+      <a href="about.html" data-ru="обо мне" data-en="about">обо мне</a>
+      <a href="contact.html" data-ru="контакты" data-en="contact">контакты</a>
+      <span class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang-btn="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang-btn="en" aria-pressed="false">EN</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="section-panel">
+    <div class="wrap">
+      <p class="kicker">LABORATORY</p>
+      <h2 data-ru="Опыты, а не витрина" data-en="Experiments, not a showroom">Опыты, а не витрина</h2>
+      <p class="lede" data-ru="Здесь проекты, которые интересны, но не претендуют на полноценный кейс: прототипы, тесты инструментов, честный статус — включая то, что не получилось." data-en="Projects that are interesting but do not claim to be full cases: prototypes, tool experiments, honest status — including what did not work out.">Проекты, которые интересны, но не претендуют на полноценный кейс.</p>
+
+      <div class="plain-list" style="margin-top:2rem">
+        <div class="holo clip" style="color:var(--ink)">
+          <p class="kicker" data-ru="опыт" data-en="experiment">опыт</p>
+          <h3>Horizon Chamber</h3>
+          <p class="lede" data-ru="Тест потолка агентной разработки: десктопное приложение целиком — бэкенд на FastAPI, time-aware небула на canvas, рассветный будильник со звуком, захват мыслей, цели и канбан, нативный Win32-трекинг активности, агрегация n8n через SSE, сборка в один .exe. Честный итог: продукт настоящий (11 наборов pytest, модульная архитектура, SemVer-чейнджлог), но код сырой — это был тест процесса, а не витринный проект." data-en="A probe of the agentic workflow&#39;s ceiling: a full desktop product — FastAPI backend, time-aware canvas nebula, audiovisual sunrise alarm, thought capture, goals and kanban, native Win32 activity tracking, n8n aggregation over SSE, shipped as a single .exe. Honest verdict: the product is real (11 pytest files, modular architecture, SemVer changelog) but the code is rough — it was a workflow test, not a showcase.">Тест потолка агентной разработки: полноценное десктопное приложение на FastAPI, canvas-небула, будильник, канбан, Win32-трекинг, сборка в .exe. Код сырой — это был тест процесса.</p>
+          <div class="chips"><span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">n8n</span><span class="chip">Win32</span><span class="chip chip-neon" data-ru="статус: пауза" data-en="status: paused">статус: пауза</span></div>
+        </div>
+
+        <div class="holo clip" style="color:var(--ink)">
+          <p class="kicker" data-ru="опыт" data-en="experiment">опыт</p>
+          <h3 data-ru="Эксперименты с процессом разработки" data-en="Workflow experimentation">Эксперименты с процессом разработки</h3>
+          <p class="lede" data-ru="Постоянная итерация самого рабочего процесса: агентные кодинг-инструменты, спецификация-первым, премортем-планирование. Эта нить связывает лабораторию и кейсы." data-en="Ongoing iteration on the development workflow itself: agentic coding tools, spec-first planning, pre-mortem plans. This thread ties the laboratory to the case studies.">Итерация самого процесса: агентные инструменты, спецификация-первым, премортем-планирование.</p>
+          <div class="chips"><span class="chip">OpenCode</span><span class="chip">Kun</span><span class="chip">DeepSeek</span><span class="chip" data-ru="идёт" data-en="ongoing">идёт</span></div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:2.6rem" data-ru="Очередь опытов" data-en="In the queue">Очередь опытов</h3>
+      <ul class="plain-list">
+        <li><span class="chip">3D graphics</span><span class="empty-state" data-ru="Projection3D, Topography-3D, Parametric-Curves, floating-horizon, Textures" data-en="Projection3D, Topography-3D, Parametric-Curves, floating-horizon, Textures">Projection3D и др.</span></li>
+        <li><span class="chip">Crypto / security</span><span class="empty-state" data-ru="RSA-Crypto, Lab-Crypto-Encoder, Lab-Steganography" data-en="RSA-Crypto, Lab-Crypto-Encoder, Lab-Steganography">RSA, стеганография</span></li>
+        <li><span class="chip">Coursework</span><span class="empty-state" data-ru="Expert-System, 2D-Optimization, Interpolation, LinearEquationsSystems" data-en="Expert-System, 2D-Optimization, Interpolation, LinearEquationsSystems">Expert-System и др.</span></li>
+      </ul>
+      <div class="hero-cta">
+        <a class="btn" href="projects.html" data-ru="к кейсам →" data-en="to the cases →">к кейсам →</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <p class="brand-name" style="margin:0 0 .5rem">Ms<b>Binary</b>Lily</p>
+      <p class="footer-meta" data-ru="Лилия Гринина · Тамбов, Россия · UTC+3" data-en="Lilia Grinina · Tambov, Russia · UTC+3">Лилия Гринина · Тамбов, Россия · UTC+3</p>
+      <div class="footer-links" style="margin-top:.9rem">
+        <a href="https://t.me/MsBinaryLily" rel="noopener">Telegram</a>
+        <a href="https://github.com/IonShieldQuad" rel="noopener">GitHub</a>
+        <a href="contact.html" data-ru="контакты" data-en="contact">контакты</a>
+      </div>
+    </div>
+    <p class="footer-meta" data-ru="Ванильный статический сайт: HTML, CSS, WebGL. Без фреймворков — по ADR-001." data-en="A vanilla static site: HTML, CSS, WebGL. No frameworks — per ADR-001.">Ванильный статический сайт: HTML, CSS, WebGL. Без фреймворков — по ADR-001.</p>
+  </div>
+</footer>
+
+<script src="data/cases.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>
