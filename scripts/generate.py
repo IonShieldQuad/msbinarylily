@@ -162,11 +162,26 @@ def evidence_links(text: str) -> list[dict]:
 
 
 def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
-    """-> (case dict, errors, warnings)"""
+    """-> (case dict, errors, warnings)
+
+    `path` is the English source case. A Russian sibling at `ru/<name>` is used
+    for the RU slots when present (see specs/content-pipeline.md).
+    """
     errors: list[str] = []
     warnings: list[str] = []
     text = path.read_text(encoding="utf-8")
     fm, body = split_frontmatter(text)
+
+    ru_path = path.parent / "ru" / path.name
+    ru_fm: dict = {}
+    ru_found: dict[str, str] = {}
+    if ru_path.exists():
+        ru_text = ru_path.read_text(encoding="utf-8")
+        ru_fm, ru_body = split_frontmatter(ru_text)
+        ru_found = sections(ru_body)
+        for heading, _field, required in SECTION_MAP:
+            if required and not (ru_found.get(heading) or "").strip():
+                errors.append(f"ru/{path.name}: missing required section '## {heading}'")
     tags = fm.get("tags", [])
     if isinstance(tags, list) and "type/case" not in tags:
         warnings.append(f"{path.name}: frontmatter tags lack 'type/case'")
@@ -192,11 +207,14 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
                 f"{path.name}: {'missing required' if required else 'no'} section '## {heading}'"
             )
             continue
-        if field == "stack":
+        if field in ("stack", "evidence"):
             continue
-        if field == "evidence":
-            continue
-        fields[field] = {"ru": delink(content).strip(), "en": delink(content).strip()}
+        en_text = delink(content).strip()
+        ru_source = (ru_found.get(heading) or "").strip()
+        fields[field] = {
+            "ru": delink(ru_source).strip() if ru_source else en_text,
+            "en": en_text,
+        }
 
     stack = stack_list(found.get("Stack", ""))
     if not stack:
@@ -211,9 +229,14 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
     case_id = path.stem
     src = body_lang(body)
     title_pair = {
-        "ru": str(fm.get("case-title", case_id)),
+        "ru": str(ru_fm.get("case-title") or fm.get("case-title", case_id)),
         "en": str(fm.get("case-title-en", fm.get("case-title", case_id))),
     }
+    # a sibling file is an AI-assisted translation until someone marks it reviewed
+    ru_status = str(ru_fm.get("translation", "machine")).strip().lower()
+    if ru_status not in {"machine", "human"}:
+        warnings.append(f"ru/{path.name}: unknown translation value '{ru_status}' — treated as machine")
+        ru_status = "machine"
     return (
         {
             "id": case_id,
@@ -228,7 +251,7 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
             # something to render; `lang` / `translation` say which slot is the
             # real source and which still needs a human (or machine) pass.
             "lang": src,
-            "translation": {"ru": "source" if src == "ru" else "missing",
+            "translation": {"ru": "source" if src == "ru" else (ru_status if ru_found else "missing"),
                             "en": "source" if src == "en" else "missing"},
             **fields,
             "updated": str(fm.get("updated", "")),
@@ -245,7 +268,7 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
 def build(source: Path) -> tuple[dict, list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
-    files = sorted(source.glob("*.md"))
+    files = sorted(source.glob("*.md"))  # non-recursive: cases/ru/*.md is never a case
     if not files:
         return {}, [f"no case files under {source}"], []
 
@@ -277,6 +300,12 @@ def build(source: Path) -> tuple[dict, list[str], list[str]]:
             warnings.append(
                 f"{len(missing)} case(s) have no {label} translation: {', '.join(missing)}"
             )
+    machine = [c["id"] for c in cases if c["translation"]["ru"] == "machine"]
+    if machine:
+        warnings.append(
+            f"{len(machine)} RU translation(s) are AI-assisted and not human-reviewed yet "
+            f"(mark `translation: human` in the ru/ frontmatter once reviewed): {', '.join(machine)}"
+        )
 
     newest = max((f.stat().st_mtime for f in files), default=0)
     generated = dt.datetime.fromtimestamp(newest, dt.timezone.utc).replace(microsecond=0)

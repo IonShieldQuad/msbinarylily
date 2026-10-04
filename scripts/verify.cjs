@@ -57,6 +57,14 @@ const NAV = ['index.html', 'projects.html', 'laboratory.html', 'about.html', 'co
       ambient: !!document.querySelector('#ambient'),
       h1: document.querySelector('h1')?.textContent?.trim() || null,
       emptyState: document.querySelector('.empty-state')?.textContent?.trim() || null,
+      notice: [...document.querySelectorAll('.notice')].filter((el) => !el.hidden).map((el) => el.textContent.trim().slice(0, 50)).join(' | ') || null,
+      caseText: (document.querySelector('.case-section .prose, .case-section p')?.textContent || '').slice(0, 80),
+      cyrillic: (() => {
+        const txt = document.querySelector('#case-root')?.textContent || '';
+        const letters = [...txt].filter((ch) => /\p{L}/u.test(ch));
+        const cyr = letters.filter((ch) => /[а-яёА-ЯЁ]/i.test(ch)).length;
+        return letters.length ? Math.round((cyr / letters.length) * 100) : 0;
+      })(),
     }));
 
     // language toggle: RU -> EN on a page that has a hero lede

@@ -207,13 +207,13 @@
       ['related', 'related', 'Связанное'],
     ].filter(([key]) => c[key] && t(c[key]));
 
-    const srcLang = c.lang === 'ru' ? 'ru' : 'en';
-    const untranslated = state.lang !== srcLang;
-    const notice = !untranslated ? '' : (state.lang === 'ru'
-      ? `<p class="notice">Перевод на русский готовится — сейчас показан английский оригинал кейса
-         (<code>translation.ru: missing</code> в манифесте).</p>`
-      : `<p class="notice">EN translation pending — showing the RU source
-         (<code>translation.en: missing</code> in the manifest).</p>`);
+    const status = (c.translation || {})[state.lang] || 'missing';
+    const notice = status !== 'missing' ? '' : (state.lang === 'ru'
+      ? `<p class="notice">Перевод на русский готовится — сейчас показан английский оригинал кейса.</p>`
+      : `<p class="notice">EN translation pending — showing the RU source.</p>`);
+    const translationNote = status === 'machine'
+      ? `<p class="empty-state" style="margin-top:1.2rem">перевод: AI-assisted, вычитка вручную ещё не сделана</p>`
+      : '';
 
     host.innerHTML = `
       <section class="case-head">
@@ -251,6 +251,7 @@
               </div>` : ''}
             </aside>
           </div>
+          ${translationNote}
           <nav class="pager">
             ${prev ? `<a href="case.html?project=${prev.id}" data-ru="← ${escapeHtml(t(prev.title))}" data-en="← ${escapeHtml(t(prev.title))}">← ${escapeHtml(t(prev.title))}</a>` : '<span></span>'}
             ${next ? `<a href="case.html?project=${next.id}" data-ru="${escapeHtml(t(next.title))} →" data-en="${escapeHtml(t(next.title))} →">${escapeHtml(t(next.title))} →</a>` : '<span></span>'}
