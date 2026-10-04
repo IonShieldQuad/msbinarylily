@@ -43,12 +43,24 @@
     <div class="wrap">
       <p class="kicker">PROJECTS</p>
       <h2 data-ru="Кейсы, а не список технологий" data-en="Cases, not a tech list">Кейсы, а не список технологий</h2>
-      <p class="lede" data-ru="Каждый кейс — задача, решения, стек и то, что получилось. Фильтруйте по направлению." data-en="Each case is a problem, the decisions, the stack and the outcome. Filter by area.">Каждый кейс — задача, решения, стек и то, что получилось. Фильтруйте по направлению.</p>
+      <p class="lede" data-ru="Каждый кейс — задача, решения, стек и то, что получилось. Сначала то, что ближе всего к задачам клиентов, дальше — инженерная глубина и эксперименты. Фильтруйте по направлению." data-en="Each case is a problem, the decisions, the stack and the outcome. Work closest to client problems comes first; engineering depth and experiments follow. Filter by area.">Каждый кейс — задача, решения, стек и то, что получилось. Сначала то, что ближе к задачам клиентов, дальше — инженерная глубина.</p>
       <div class="chips" id="case-filters" style="margin-top:1.4rem" role="group" aria-label="Filters">
         <button class="chip chip-neon" type="button" data-filter="all" aria-pressed="true" data-ru="все" data-en="all">все</button>
       </div>
-      <div class="card-grid" id="case-grid" style="margin-top:1.6rem">
-        <p class="empty-state" data-ru="загрузка манифеста…" data-en="loading manifest…">загрузка манифеста…</p>
+      <div id="group-client" style="margin-top:2rem">
+        <p class="kicker" data-ru="для клиентов" data-en="for clients">для клиентов</p>
+        <h3 data-ru="Задачи, которые можно заказать" data-en="Work you can commission">Задачи, которые можно заказать</h3>
+        <div class="card-grid" id="case-grid-client" style="margin-top:1rem">
+          <p class="empty-state" data-ru="загрузка манифеста…" data-en="loading manifest…">загрузка манифеста…</p>
+        </div>
+      </div>
+
+      <div id="group-depth" style="margin-top:3rem">
+        <p class="kicker" data-ru="инженерная глубина" data-en="engineering depth">инженерная глубина</p>
+        <h3 data-ru="То, что показывает, как я думаю" data-en="The work that shows how I think">То, что показывает, как я думаю</h3>
+        <div class="card-grid" id="case-grid-depth" style="margin-top:1rem">
+          <p class="empty-state" data-ru="загрузка манифеста…" data-en="loading manifest…">загрузка манифеста…</p>
+        </div>
       </div>
       <p class="notice" data-manifest-note hidden>
         <span data-ru="Манифест не загрузился: откройте сайт через локальный сервер (python -m http.server) или проверьте data/cases.js." data-en="Manifest failed to load: serve the site (python -m http.server) or check data/cases.js.">Манифест не загрузился.</span>

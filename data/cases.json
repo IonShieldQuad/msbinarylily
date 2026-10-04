@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-08-27T16:09:58Z",
+    "generated_at": "2026-10-04T17:41:04Z",
     "source": "H:/ObsidianVaultCentral/Work/Personal/portfolio-site/cases",
     "schema_version": "1",
     "case_count": 9
@@ -11,6 +11,7 @@
       "theme": "ai",
       "order": 1,
       "featured": true,
+      "audience": "client",
       "title": {
         "ru": "TG Aggregator",
         "en": "TG Aggregator"
@@ -92,6 +93,7 @@
       "theme": "ai",
       "order": 2,
       "featured": true,
+      "audience": "client",
       "title": {
         "ru": "AI-агенты и автоматизация",
         "en": "AI Agents & Automation"
@@ -172,8 +174,9 @@
     {
       "id": "lilys-innovations",
       "theme": "modding",
-      "order": 2,
+      "order": 3,
       "featured": true,
+      "audience": "client",
       "title": {
         "ru": "Lily's Innovations",
         "en": "Lily's Innovations"
@@ -234,27 +237,34 @@
       "updated": "2026-08-15"
     },
     {
-      "id": "cpu-from-nand",
-      "theme": "lowlevel",
+      "id": "android-apps",
+      "theme": "mobile",
       "order": 4,
-      "featured": true,
+      "featured": false,
+      "audience": "client",
       "title": {
-        "ru": "Процессор из NAND",
-        "en": "CPU from NAND"
+        "ru": "Android-приложения",
+        "en": "Android Apps"
       },
       "stack": [
-        "NAND logic",
-        "custom 32-bit ISA + assembly",
-        "*Turing Complete* (game)"
+        "Java",
+        "Android SDK",
+        "Gradle",
+        "Room ORM",
+        "Google Maps SDK",
+        "SQLite",
+        "ViewBinding",
+        "LiveData/ViewModel",
+        "RecyclerView"
       ],
       "evidence": [
         {
-          "url": "",
-          "label": "symphony-isa"
+          "url": "https://github.com/IonShieldQuad/Planner",
+          "label": "github.com"
         },
         {
-          "url": "",
-          "label": "symphony-programs"
+          "url": "https://github.com/IonShieldQuad/Tetris",
+          "label": "github.com"
         }
       ],
       "status": "draft",
@@ -264,40 +274,40 @@
         "en": "source"
       },
       "overview": {
-        "ru": "Спроектировал полноценный работающий процессор — под именем **Symphony** — с самого низа: с отдельного логического элемента NAND. Собранный в игре *Turing Complete*, он представляет собой упрощение настоящего кремния, но при этом вполне реален: вентили → защёлки → регистры → ALU → RAM → шина → собственный 32-битный набор инструкций со своим ассемблером. Бюджет задержки в уровне — 175; готовый процессор работает на **58**, проходя уровень с большим запасом.",
-        "en": "Designed a complete working CPU — named **Symphony** — from the absolute bottom: a single NAND gate. Built in the game *Turing Complete*, the logic is a simplification of real silicon but genuinely real: gates → latches → registers → ALU → RAM → bus → a custom 32-bit instruction set with its own assembly. The level's delay budget was 175; the finished CPU runs at **58**, passing with room to spare."
+        "ru": "Два законченных Android-приложения, созданных во время учёбы в университете: **Planner** — приложение для планирования дневных поездок на Room и Google Maps, и **Tetris** — полноценная игра с кастомным рендерингом и системой рекордов на SQLite. Оба — настоящие Gradle-проекты с правильной структурой приложения, свидетельство мобильной разработки наряду с десктопной и веб-работой.",
+        "en": "Two complete Android applications built during university studies: **Planner**, a daily trip-planning app using Room and Google Maps, and **Tetris**, a full playable game with custom rendering and a SQLite high-score system. Both are real Gradle projects with proper app structure — evidence of mobile development alongside the desktop and web work."
       },
       "role": {
-        "ru": "Единственный проектировщик и разработчик — архитектура, проектирование ISA и оптимизация с первых принципов.",
-        "en": "Solo designer and builder — architecture, ISA design, and optimization from first principles."
+        "ru": "Соло-разработчик — оба приложения спроектированы и собраны от начала до конца.",
+        "en": "Solo developer — both apps designed and built end to end."
       },
       "problem": {
-        "ru": "Можно ли построить работающий процессор исключительно из базовой логики, понимая каждый уровень? Не просто «донастроить дизайн», а собрать всю машину из одного примитива и сделать её достаточно быстрой, чтобы уложиться в жёсткий бюджет времени игры. Результатом должна была стать настоящая программируемая архитектура — не игрушка.",
-        "en": "Could a working processor be built purely from fundamental logic, understanding every layer? Not just \"tune a design\" but construct the entire machine from a single primitive and make it fast enough to beat the game's strict timing budget. The result had to be a real, programmable architecture — not a toy."
+        "ru": "Учёба в университете включала создание реальных Android-приложений. Возникли две разные задачи: утилита, которой нужны локальное хранение данных и реальные картографические данные (Planner), и игра, которой нужны рабочий игровой цикл, кастомная графика и сохранение результатов (Tetris).",
+        "en": "University studies included building real Android applications. Two distinct problems emerged: a utility app that needed local data persistence plus real-world map data (Planner), and a game that needed a working game loop, custom graphics, and score persistence (Tetris)."
       },
       "solution": {
-        "ru": "Собрал снизу вверх, пройдя через все уровни цифрового проектирования:\n\n1. **Комбинационная логика** — NOT/OR/AND из NAND; компараторы; шифраторы/дешифраторы; мультиплексоры/демультиплексоры\n2. **Последовательностная логика** — защёлки → регистры → счётчики\n3. **Хранение** — RAM, включая энергонезависимую (постоянную) память\n4. **Арифметика** — полный математический блок: ADD, SUB, MUL, DIV\n5. **Процессор** — полноценная шина, связывающая всё вместе и реализующая ISA Symphony\n\n**ISA Symphony** — набор инструкций фиксированной длины 32 бита (4 байта) с 16 регистрами (`zr, r1–r13, sp, flags`): инструкции ввода-вывода (`in/out/keyboard/screen/time/counter`), полноценный ALU с непосредственными операндами и метками, 8 условных переходов (наборы знаковых и беззнаковых сравнений по регистру `flags`) и доступ к памяти разрядностью 8/16/32 бита плюс энергонезависимая память. Полный листинг: ISA Symphony.\n\nНа процессоре были написаны настоящие программы на ассемблере Symphony: рекурсивная «Ханойская башня» (через стек), генератор псевдослучайных чисел xorshift, переводчик букв в верхний регистр, алгоритм сортировки в памяти и бот, играющий в Nim безошибочно. См. программы Symphony.",
-        "en": "Built bottom-up through every layer of digital design:\n\n1. **Combinational logic** — NOT/OR/AND from NAND; comparators; encoders/decoders; multiplexers/demultiplexers\n2. **Sequential logic** — latches → registers → counters\n3. **Storage** — RAM, including persistent (non-volatile) memory\n4. **Arithmetic** — full math unit: ADD, SUB, MUL, DIV\n5. **The CPU** — a full bus connecting everything, implementing the Symphony ISA\n\nThe **Symphony ISA** is a fixed 32-bit (4-byte) instruction set with 16 registers (`zr, r1–r13, sp, flags`): I/O instructions (`in/out/keyboard/screen/time/counter`), a full ALU with immediate and label operands, 8 conditional jumps (signed and unsigned comparison sets from a `flags` register), and memory access in 8/16/32-bit widths plus persistent memory. Full listing: symphony-isa.\n\nReal programs were written in Symphony assembly and run on the CPU: recursive Tower of Hanoi (via the stack), a xorshift random-number generator, a letter capitalizer, an in-memory sorting algorithm, and a perfect-play Nim bot. See symphony-programs."
+        "ru": "### Planner — планирование дневных поездок (`com.ionshield.planner`)\n\n- Слой данных на **Room ORM**: 10 сущностей (`Plan`, `Event`, `Location`, `Node`, `Note`, `Constraint`, `Type` плюс связующие таблицы) с DAO и репозиториями (`PlannerRepository`, `PathRepository`).\n- **Интеграция с Google Maps**: `play-services-maps`, `play-services-location` и `google-maps-services` — картографические данные были практически необходимы для функций планирования.\n- **Современный Android-стек**: ViewBinding, LiveData/ViewModel, RecyclerView, компоненты Material, Preferences.\n- Работало как функциональный MVP — честная оговорка: UX был сырым.\n\n### Tetris — полноценная игра (`com.ionshield.tetris`)\n\n- **Кастомный игровой рендеринг**: `TetrisView` (игровое поле) и `NextShapeView` (превью), управляемые игровым циклом `TetrisController`.\n- **Несколько активити**: экраны меню, игры, настроек и результатов, плюс `ResultAdapter`.\n- **Рекорды на SQLite**: `DatabaseContract` + `DatabaseHelper`.\n- UI-мелочи вроде `RepeatListener` для автоповтора клавиш и `PointInt2D` для координат на поле.",
+        "en": "### Planner — daily trip planning (`com.ionshield.planner`)\n\n- **Room ORM** data layer: 10 entities (`Plan`, `Event`, `Location`, `Node`, `Note`, `Constraint`, `Type`, plus join tables) with DAOs and repositories (`PlannerRepository`, `PathRepository`).\n- **Google Maps integration**: `play-services-maps`, `play-services-location`, and `google-maps-services` — map data was required for the planning features in practice.\n- **Modern Android stack**: ViewBinding, LiveData/ViewModel, RecyclerView, Material components, Preferences.\n- Worked as a functional MVP — honest note: the UX was rough.\n\n### Tetris — a full game (`com.ionshield.tetris`)\n\n- **Custom game rendering**: `TetrisView` (the board) and `NextShapeView` (preview), driven by a `TetrisController` game loop.\n- **Multiple activities**: menu, game, settings, and results screens, plus a `ResultAdapter`.\n- **SQLite high scores**: `DatabaseContract` + `DatabaseHelper`.\n- UI niceties like `RepeatListener` for key repeat and `PointInt2D` for board coordinates."
       },
       "timeline": {
-        "ru": "Недавний сольный проект.",
-        "en": "Recent, solo project."
+        "ru": "2020, университетский курс (Planner 2020-06, Tetris 2020-09).",
+        "en": "2020, university coursework (Planner 2020-06, Tetris 2020-09)."
       },
       "impact": {
-        "ru": "- **1.8 млрд вентилей** суммарно (большая часть — в RAM)\n- **ALU: 6.6k вентилей** — крупнейший компонент помимо RAM\n- **Итоговая задержка: 58** (вклад ALU — 28) — против бюджета уровня **175** → пройдено примерно в 3 раза ниже бюджета\n- **Оптимизации**: сумматор с последовательным переносом (30+ единиц времени) → префиксный сумматор **Kogge-Stone** (**8 единиц времени**); деление уложено в **менее 100 единиц времени**\n- **5 настоящих программ** на процессоре (рекурсия, PRNG, сортировка, работа с битами, игровая стратегия)",
-        "en": "- **1.8 billion gates** total (most in RAM)\n- **ALU: 6.6k gates** — the largest non-RAM component\n- **Total delay: 58** (ALU contributes 28) — vs the level's **175** budget → passed ~3× under budget\n- **Optimizations**: ripple-carry adder (30+ time units) → **Kogge-Stone** prefix adder (**8 time units**); division reduced to **under 100 time units**\n- **5 real programs** run on the CPU (recursion, PRNG, sorting, bit manipulation, game strategy)"
+        "ru": "- **Два законченных собираемых Android-приложения** с настоящей структурой (активити, слои данных, кастомные вью)\n- **Planner**: база данных Room + интеграция с Google Maps, работающие как MVP\n- **Tetris**: полноценный игровой цикл с кастомным рендерингом на canvas и сохранением рекордов\n- Честные рамки: университетские проекты, внешних пользователей нет; UX в Planner был сырым",
+        "en": "- **Two complete, buildable Android apps** with real app structure (activities, data layers, custom views)\n- **Planner**: Room database + Google Maps integration working as an MVP\n- **Tetris**: full playable game loop with custom canvas rendering and persistent high scores\n- Honest scope: university projects, no external users; Planner's UX was rough"
       },
       "deepDive": {
-        "ru": "История оптимизации — сердце этого кейса:\n\n- **Сумматор**: начинался как простой сумматор с последовательным переносом на 30+ единиц времени; заменён на параллельный префиксный сумматор **Kogge-Stone**, достигший **8 единиц времени** — выигрыш примерно в 4 раза за счёт обмена числа вентилей на задержку, классический компромисс схем ускоренного переноса.\n- **Деление**: уложено в **менее 100 единиц времени** за счёт аккуратно построенных операторов — самая сложная инструкция в любом низкоуровневом ALU.\n- **Проектирование ISA**: варианты с непосредственными операндами используют те же семейства опкодов, что и регистровые формы (чистое декодирование); знаковые и беззнаковые переходы по сравнению читают общий регистр `flags`; разрядность памяти (8/16/32) вместе с энергонезависимой памятью покрывает и стек, и хранение.\n\nПрограммы проверяют весь стек целиком: «Ханойская башня» доказывает, что call/ret и рекурсия через стек работают; PRNG доказывает энергонезависимую память и настоящий генератор псевдослучайных чисел; алгоритм сортировки задействует режимы адресации и сравнения; переводчик в верхний регистр показывает трюк с переключением бита ASCII одной инструкцией; Nim кодирует игровую теорию mod-4 в одном побитовом AND.",
-        "en": "The optimization story is the heart of the case:\n\n- **Adder**: started as a simple ripple-carry adder at 30+ time units; replaced with a **Kogge-Stone** parallel prefix adder reaching **8 time units** — a ~4× win by trading gate count for latency, the classic carry-lookahead tradeoff.\n- **Division**: brought under **100 time units** through careful operator construction — the hard instruction in any low-level ALU.\n- **ISA design**: immediate variants share opcode families with register forms (clean decode); signed vs unsigned comparison jumps read a shared `flags` register; memory widths (8/16/32) plus persistent memory cover both stack and storage use cases.\n\nThe programs validate the whole stack: Hanoi proves call/ret + stack recursion works; the RNG proves persistent memory and a real PRNG; the sorting algorithm exercises addressing modes and comparisons; the capitalizer shows the ASCII bit-flip trick in one instruction; Nim encodes mod-4 game theory as a single bitwise AND."
+        "ru": "- **Два подхода к хранению, намеренно разные**: Planner использует Room (ORM с проверкой на этапе компиляции, DAO и экспортом схемы), а Tetris — чистый SQLite через пару `DatabaseContract`/`DatabaseHelper` — оба варианта обоснованы и подобраны под свою задачу.\n- **Кастомный рендеринг в Tetris**: поле — это кастомный `View`, рисующий прямоугольники ячеек, которым управляет контроллер, владеющий состоянием игры, — чистое разделение модели и представления без игрового движка.\n- **Карты в приложении-планировщике**: сервисы Google Maps для реальных картографических данных (необходимы для планирования поездок на практике), подключённые через конфигурацию подписи Gradle и плагин секретов.\n- **Настоящая гигиена проекта**: `.gitignore`, Gradle wrapper, конфигурации подписи, зависимости тестов JUnit + Espresso, настроенные в обоих приложениях.",
+        "en": "- **Two persistence approaches, deliberately different**: Planner uses Room (compile-time-verified ORM with DAOs and a schema export path), while Tetris uses raw SQLite via a `DatabaseContract`/`DatabaseHelper` pair — both valid choices matched to their need.\n- **Custom rendering for Tetris**: the board is a custom `View` drawing cell rectangles, updated by a controller that owns the game state — a clean model/view split without a game engine.\n- **Maps in a planning app**: Google Maps services for real map data (required for planning trips in practice), wired through the Gradle signing config and the secrets plugin.\n- **Real project hygiene**: `.gitignore`, Gradle wrapper, signing configs, JUnit + Espresso test dependencies configured on both apps."
       },
       "lessons": {
-        "ru": "- **Важен каждый уровень** — сборка из NAND делает весь стек (тайминг ALU, разрядность шины, декодирование ISA) осязаемым, а не абстрактным.\n- **Оптимизация — это компромисс между задержкой и числом вентилей** — переход от последовательного переноса к Kogge-Stone делает учебную компьютерную архитектуру живой.\n- **Проектирование ISA — это вкус** — инструкции фиксированной ширины, общие семейства опкодов и регистр flags упрощают декодирование и делают программирование разумным.\n- **Процессор по-настоящему существует, только когда на нём выполняется реальный код** — рекурсия, PRNG и игровые боты доказывают, что машина работает от начала до конца.",
-        "en": "- **Every layer matters** — building from NAND makes the whole stack (ALU timing, bus width, ISA decode) tangible, not abstract.\n- **Optimization is a latency/gate tradeoff** — the ripple→Kogge-Stone jump is textbook computer architecture made visceral.\n- **ISA design is taste** — fixed-width instructions, shared opcode families, and a flags register keep decode simple and programming sane.\n- **A CPU is only real when you run real code on it** — recursion, PRNGs, and game bots prove the machine works end-to-end."
+        "ru": "- **Выбор способа хранения следует из задачи** — Room для приложения с большим объёмом данных и связями; чистый SQLite, когда нужна лишь таблица рекордов.\n- **Игровой цикл без движка** — кастомных вью и контроллера достаточно для полноценной игры; рендеринг и состояние можно чисто разделить.\n- **MVP — это функция важнее лоска** — Planner работал, но UX был сырым; приоритет — выпустить рабочий костяк, итерации придут позже.\n- **Мобильная разработка — ещё одна поверхность для тех же основ** — SQL, конечные автоматы и логика UI переносятся; новизна — в платформе.",
+        "en": "- **Persistence choice follows the problem** — Room for a data-heavy app with relations; raw SQLite when all you need is a high-score table.\n- **A game loop without an engine** — custom views + a controller are enough for a full game; rendering and state can stay cleanly separated.\n- **MVP means function over polish** — Planner worked but the UX was rough; shipping a working core is the priority, iteration comes later.\n- **Mobile is another surface for the same fundamentals** — SQL, state machines, and UI logic transfer; the platform is the new part."
       },
       "related": {
-        "ru": "- ISA Symphony — набор инструкций\n- программы Symphony — программы\n- Компилятор / Переводчик — родственный низкоуровневый кейс (компиляторы)\n- о Lily — контекст об авторе\n- модель кейс-стади — модель, которой следует этот кейс",
-        "en": "- symphony-isa — the ISA\n- symphony-programs — the programs\n- compiler-translator — the sibling low-level case (compilers)\n- about-lily — builder context\n- case-study-model — the model this case follows"
+        "ru": "- Реестр кейсов — источник этого кластера\n- Алгоритмы сжатия — ещё один кейс из эпохи Java\n- О Лили — контекст автора\n- Модель кейс-стади — модель, которой следует этот кейс",
+        "en": "- case-inventory — source of this cluster\n- compression-algorithms — another Java-era case\n- about-lily — builder context\n- case-study-model — the model this case follows"
       },
       "updated": "2026-08-16"
     },
@@ -305,7 +315,8 @@
       "id": "compiler-translator",
       "theme": "lowlevel",
       "order": 5,
-      "featured": true,
+      "featured": false,
+      "audience": "depth",
       "title": {
         "ru": "Компилятор / Переводчик",
         "en": "Compiler / Translator"
@@ -377,10 +388,147 @@
       "updated": "2026-08-16"
     },
     {
-      "id": "compression-algorithms",
-      "theme": "algorithms",
+      "id": "neural-net-from-scratch",
+      "theme": "ai",
       "order": 6,
       "featured": false,
+      "audience": "depth",
+      "title": {
+        "ru": "Нейросеть с нуля",
+        "en": "Neural Net from Scratch"
+      },
+      "stack": [
+        "Vanilla JavaScript",
+        "HTML",
+        "CSS",
+        "Canvas (no libraries",
+        "no build step)"
+      ],
+      "evidence": [
+        {
+          "url": "https://github.com/IonShieldQuad/Evasion-learning",
+          "label": "github.com"
+        }
+      ],
+      "status": "draft",
+      "lang": "en",
+      "translation": {
+        "ru": "machine",
+        "en": "source"
+      },
+      "overview": {
+        "ru": "Нейронная сеть, полностью написанная с нуля на **чистом JavaScript — без единой библиотеки**, — которая учится играть в игру с уклонением от блоков. Шарик на сетке избегает падающих препятствий, обучаясь **одновременно** методом обратного распространения ошибки и **нейрогенетическим (эволюционным)** алгоритмом. Четыре функции активации, настраиваемая архитектура, узлы памяти и живая визуализация в браузере. Создано, чтобы по-настоящему понять, что такое машинное обучение, с первых принципов.",
+        "en": "A neural network built entirely from scratch in **vanilla JavaScript — zero libraries** — that learns to play a dodge-the-blocks game. A ball on a grid avoids falling obstacles, trained by **both** backpropagation and a **neurogenetic (evolutionary)** algorithm. Four activation functions, configurable architecture, memory nodes, and live visualization in the browser. Built to genuinely understand what machine learning is, from first principles."
+      },
+      "role": {
+        "ru": "Единственный разработчик — архитектура сети, оба алгоритма обучения, визуализация. Проект для самообразования.",
+        "en": "Solo developer — network architecture, both learning algorithms, visualization. Self-study project."
+      },
+      "problem": {
+        "ru": "Мне хотелось понять, чем нейронная сеть на самом деле *является*, — не подключив библиотеку и вызвав `fit()`, а построив само обучение: веса, смещения, прямой проход, обратное распространение ошибки и эволюционную оптимизацию. Задача: сеть, управляющая шариком, который уклоняется от падающих блоков на сетке, обучаясь исключительно на опыте (без вручную заданных правил).",
+        "en": "I wanted to know what a neural network actually *is* — not by importing a library and calling `fit()`, but by building learning itself: weights, biases, feed-forward, error backpropagation, and evolutionary optimization. The challenge: a network that controls a ball dodging falling blocks on a grid, learning purely from experience (no hand-coded rules)."
+      },
+      "solution": {
+        "ru": "Написанный вручную класс `Network` плюс две полноценные стратегии обучения:\n\n- **Архитектура**: слои узлов со взвешенными связями и смещениями; настраиваемые скрытые слои; типы входных/выходных/запоминающих узлов; полный прямой проход `process()`. Настраиваемые функции активации (sigmoid, ReLU, Leaky ReLU, softplus), каждая со своей производной для обратного распространения.\n- **Режим обратного распространения**: распространение ошибки от выхода назад через слои, накопление градиента по обучающей выборке, дельты весов и смещений, масштабированные скоростью обучения, затем применение — полноценный тренер градиентного спуска, написанный вручную.\n- **Режим эволюции (нейрогенетический)**: популяция сетей, каждая оценивается за проход; лучшая половина клонируется со случайной мутацией на каждой итерации — выживание сильнейших как альтернатива градиентам.\n- **Узлы памяти**: настраиваемый набор рекуррентных связей, возвращающих состояние выхода обратно на вход, что даёт сети подобие кратковременной памяти.\n- **Игра**: 24 входа со сканируемой сетки соседних клеток, 3 выхода (остаться / влево / вправо); отрисовка на canvas с живыми показателями счёта, прохода и итерации; «быстрый режим» для прогона тысяч итераций за короткое время.",
+        "en": "A hand-built `Network` class plus two complete training strategies:\n\n- **Architecture**: layered nodes with weighted links and biases; configurable hidden layers; input/output/memory node types; full feed-forward `process()`. Configurable activation functions (sigmoid, ReLU, Leaky ReLU, softplus) each with its derivative for backprop.\n- **Backprop mode**: error propagation from output back through the layers, gradient accumulation across a training batch, weight/bias deltas scaled by a learning rate, then applied — a complete gradient-descent trainer written by hand.\n- **Evolution (neurogenetic) mode**: a population of networks, each scored per pass; the best half is cloned with random mutation each iteration — survival of the fittest as an alternative to gradients.\n- **Memory nodes**: a configurable set of recurrent connections feeding output state back into the input, giving the network a form of short-term memory.\n- **Game**: 24 inputs from a scanned neighborhood grid, 3 outputs (stay / move left / move right); canvas rendering with live score, pass, and iteration readouts; a \"quick mode\" to run thousands of iterations rapidly."
+      },
+      "timeline": {
+        "ru": "2017, проект для самообразования.",
+        "en": "2017, self-study project."
+      },
+      "impact": {
+        "ru": "- **Обучение видно невооружённым глазом**: сеть заметно улучшается от итерации к итерации — шарик выживает всё дольше, обучаясь и обратным распространением, и эволюцией.\n- **Две парадигмы обучения в одной кодовой базе**: и обратное распространение, и нейрогенетическая эволюция реализованы с нуля и взаимозаменяемы.\n- **Никаких внешних зависимостей**: весь ML-стек написан вручную.\n- Честные границы: проект для самообразования; количественная запись результатов не сохранилась.",
+        "en": "- **Demonstrably learns**: the network visibly improves over iterations — the ball survives progressively longer, trained by both backprop and evolution.\n- **Two learning paradigms, one codebase**: backpropagation and neurogenetic evolution both implemented from scratch and interchangeable.\n- **No external dependencies**: the entire ML stack is hand-written.\n- Honest scope: a self-study project; no quantitative score record preserved."
+      },
+      "deepDive": {
+        "ru": "- **Обратное распространение вручную**: для каждой обучающей пары сеть вычисляет ошибку выходного слоя, распространяет её назад, суммируя взвешенные вклады через каждый слой (правило цепочки), затем накапливает градиенты по каждой связи в пределах выборки и применяет `weight += -learningRate * gradient`. Дельты смещений и весов отслеживаются отдельно.\n- **Нейрогенетический цикл**: оценить каждую сеть по времени выживания, отсортировать популяцию, клонировать лучшую половину с мутацией в остальные особи, перемешать — обучение без какой-либо информации о градиенте.\n- **Производные активаций**: sigmoid, ReLU, Leaky ReLU и softplus — каждая поставляет путь `d` (производную), чтобы обратное распространение могло провести ошибку через нелинейности.\n- **Узлы памяти**: ячейки выходного слоя замыкаются обратно на входной слой, поэтому следующее решение сети зависит от её собственного предыдущего состояния — рекуррентная нотка в остальном прямом дизайне.",
+        "en": "- **Backprop by hand**: for each training pair the network computes the output-layer error, propagates it backwards by summing weighted contributions through each layer (chain rule), then accumulates per-connection gradients across the batch and applies `weight += -learningRate * gradient`. Bias and weight deltas are tracked separately.\n- **Neurogenetic loop**: score each network on survival, sort the population, clone the top half with mutation into the rest, reshuffle — learning without any gradient information.\n- **Activation derivatives**: sigmoid, ReLU, Leaky ReLU, and softplus each ship a `d` (derivative) path so backprop can propagate error through nonlinearities.\n- **Memory nodes**: output-layer cells loop back into the input layer, so the network's next decision depends on its own previous state — a recurrent flavor in an otherwise feed-forward design."
+      },
+      "lessons": {
+        "ru": "- **Написать обратное распространение самому — переломный опыт** — реализовав правило цепочки самостоятельно, начинаешь понимать его конкретно; вызов библиотеки не учит ничему из этого.\n- **Два пути к одному поведению** — и градиентный спуск, и эволюция дали обучение, но с очень разной динамикой; увидеть оба рядом — целое образование в области оптимизации.\n- **Чистого JS достаточно** — настоящему машинному обучению не нужен фреймворк; несколько сотен строк простого кода способны учиться.\n- **Визуализация — это обратная связь** — наблюдение за растущим счётом на canvas делало обучение наглядным и мотивировало настройку.",
+        "en": "- **Writing backprop is transformative** — implementing the chain rule yourself makes it concrete; a library call teaches none of it.\n- **Two paths to the same behavior** — gradient descent and evolution both produced learning, but with very different dynamics; seeing both side by side is an education in optimization.\n- **Vanilla JS is enough** — real machine learning needs no framework; a few hundred lines of plain code can learn.\n- **Visualization is feedback** — watching the score climb on canvas made the learning legible and motivated tuning."
+      },
+      "related": {
+        "ru": "- ИИ-агенты и автоматизация — там продолжается подход «ИИ с первых принципов»\n- Процессор из NAND — ещё одна сборка с первых принципов\n- о Lily — практикующий специалист по ИИ, стоящий за этим\n- модель кейс-стади — модель, которой следует этот кейс",
+        "en": "- ai-agents-automation — the first-principles AI ethos continues there\n- cpu-from-nand — another from-first-principles build\n- about-lily — the AI practitioner behind it\n- case-study-model — the model this case follows"
+      },
+      "updated": "2026-08-16"
+    },
+    {
+      "id": "cpu-from-nand",
+      "theme": "lowlevel",
+      "order": 7,
+      "featured": true,
+      "audience": "depth",
+      "title": {
+        "ru": "Процессор из NAND",
+        "en": "CPU from NAND"
+      },
+      "stack": [
+        "NAND logic",
+        "custom 32-bit ISA + assembly",
+        "*Turing Complete* (game)"
+      ],
+      "evidence": [
+        {
+          "url": "",
+          "label": "symphony-isa"
+        },
+        {
+          "url": "",
+          "label": "symphony-programs"
+        }
+      ],
+      "status": "draft",
+      "lang": "en",
+      "translation": {
+        "ru": "machine",
+        "en": "source"
+      },
+      "overview": {
+        "ru": "Спроектировал полноценный работающий процессор — под именем **Symphony** — с самого низа: с отдельного логического элемента NAND. Собранный в игре *Turing Complete*, он представляет собой упрощение настоящего кремния, но при этом вполне реален: вентили → защёлки → регистры → ALU → RAM → шина → собственный 32-битный набор инструкций со своим ассемблером. Бюджет задержки в уровне — 175; готовый процессор работает на **58**, проходя уровень с большим запасом.",
+        "en": "Designed a complete working CPU — named **Symphony** — from the absolute bottom: a single NAND gate. Built in the game *Turing Complete*, the logic is a simplification of real silicon but genuinely real: gates → latches → registers → ALU → RAM → bus → a custom 32-bit instruction set with its own assembly. The level's delay budget was 175; the finished CPU runs at **58**, passing with room to spare."
+      },
+      "role": {
+        "ru": "Единственный проектировщик и разработчик — архитектура, проектирование ISA и оптимизация с первых принципов.",
+        "en": "Solo designer and builder — architecture, ISA design, and optimization from first principles."
+      },
+      "problem": {
+        "ru": "Можно ли построить работающий процессор исключительно из базовой логики, понимая каждый уровень? Не просто «донастроить дизайн», а собрать всю машину из одного примитива и сделать её достаточно быстрой, чтобы уложиться в жёсткий бюджет времени игры. Результатом должна была стать настоящая программируемая архитектура — не игрушка.",
+        "en": "Could a working processor be built purely from fundamental logic, understanding every layer? Not just \"tune a design\" but construct the entire machine from a single primitive and make it fast enough to beat the game's strict timing budget. The result had to be a real, programmable architecture — not a toy."
+      },
+      "solution": {
+        "ru": "Собрал снизу вверх, пройдя через все уровни цифрового проектирования:\n\n1. **Комбинационная логика** — NOT/OR/AND из NAND; компараторы; шифраторы/дешифраторы; мультиплексоры/демультиплексоры\n2. **Последовательностная логика** — защёлки → регистры → счётчики\n3. **Хранение** — RAM, включая энергонезависимую (постоянную) память\n4. **Арифметика** — полный математический блок: ADD, SUB, MUL, DIV\n5. **Процессор** — полноценная шина, связывающая всё вместе и реализующая ISA Symphony\n\n**ISA Symphony** — набор инструкций фиксированной длины 32 бита (4 байта) с 16 регистрами (`zr, r1–r13, sp, flags`): инструкции ввода-вывода (`in/out/keyboard/screen/time/counter`), полноценный ALU с непосредственными операндами и метками, 8 условных переходов (наборы знаковых и беззнаковых сравнений по регистру `flags`) и доступ к памяти разрядностью 8/16/32 бита плюс энергонезависимая память. Полный листинг: ISA Symphony.\n\nНа процессоре были написаны настоящие программы на ассемблере Symphony: рекурсивная «Ханойская башня» (через стек), генератор псевдослучайных чисел xorshift, переводчик букв в верхний регистр, алгоритм сортировки в памяти и бот, играющий в Nim безошибочно. См. программы Symphony.",
+        "en": "Built bottom-up through every layer of digital design:\n\n1. **Combinational logic** — NOT/OR/AND from NAND; comparators; encoders/decoders; multiplexers/demultiplexers\n2. **Sequential logic** — latches → registers → counters\n3. **Storage** — RAM, including persistent (non-volatile) memory\n4. **Arithmetic** — full math unit: ADD, SUB, MUL, DIV\n5. **The CPU** — a full bus connecting everything, implementing the Symphony ISA\n\nThe **Symphony ISA** is a fixed 32-bit (4-byte) instruction set with 16 registers (`zr, r1–r13, sp, flags`): I/O instructions (`in/out/keyboard/screen/time/counter`), a full ALU with immediate and label operands, 8 conditional jumps (signed and unsigned comparison sets from a `flags` register), and memory access in 8/16/32-bit widths plus persistent memory. Full listing: symphony-isa.\n\nReal programs were written in Symphony assembly and run on the CPU: recursive Tower of Hanoi (via the stack), a xorshift random-number generator, a letter capitalizer, an in-memory sorting algorithm, and a perfect-play Nim bot. See symphony-programs."
+      },
+      "timeline": {
+        "ru": "Недавний сольный проект.",
+        "en": "Recent, solo project."
+      },
+      "impact": {
+        "ru": "- **1.8 млрд вентилей** суммарно (большая часть — в RAM)\n- **ALU: 6.6k вентилей** — крупнейший компонент помимо RAM\n- **Итоговая задержка: 58** (вклад ALU — 28) — против бюджета уровня **175** → пройдено примерно в 3 раза ниже бюджета\n- **Оптимизации**: сумматор с последовательным переносом (30+ единиц времени) → префиксный сумматор **Kogge-Stone** (**8 единиц времени**); деление уложено в **менее 100 единиц времени**\n- **5 настоящих программ** на процессоре (рекурсия, PRNG, сортировка, работа с битами, игровая стратегия)",
+        "en": "- **1.8 billion gates** total (most in RAM)\n- **ALU: 6.6k gates** — the largest non-RAM component\n- **Total delay: 58** (ALU contributes 28) — vs the level's **175** budget → passed ~3× under budget\n- **Optimizations**: ripple-carry adder (30+ time units) → **Kogge-Stone** prefix adder (**8 time units**); division reduced to **under 100 time units**\n- **5 real programs** run on the CPU (recursion, PRNG, sorting, bit manipulation, game strategy)"
+      },
+      "deepDive": {
+        "ru": "История оптимизации — сердце этого кейса:\n\n- **Сумматор**: начинался как простой сумматор с последовательным переносом на 30+ единиц времени; заменён на параллельный префиксный сумматор **Kogge-Stone**, достигший **8 единиц времени** — выигрыш примерно в 4 раза за счёт обмена числа вентилей на задержку, классический компромисс схем ускоренного переноса.\n- **Деление**: уложено в **менее 100 единиц времени** за счёт аккуратно построенных операторов — самая сложная инструкция в любом низкоуровневом ALU.\n- **Проектирование ISA**: варианты с непосредственными операндами используют те же семейства опкодов, что и регистровые формы (чистое декодирование); знаковые и беззнаковые переходы по сравнению читают общий регистр `flags`; разрядность памяти (8/16/32) вместе с энергонезависимой памятью покрывает и стек, и хранение.\n\nПрограммы проверяют весь стек целиком: «Ханойская башня» доказывает, что call/ret и рекурсия через стек работают; PRNG доказывает энергонезависимую память и настоящий генератор псевдослучайных чисел; алгоритм сортировки задействует режимы адресации и сравнения; переводчик в верхний регистр показывает трюк с переключением бита ASCII одной инструкцией; Nim кодирует игровую теорию mod-4 в одном побитовом AND.",
+        "en": "The optimization story is the heart of the case:\n\n- **Adder**: started as a simple ripple-carry adder at 30+ time units; replaced with a **Kogge-Stone** parallel prefix adder reaching **8 time units** — a ~4× win by trading gate count for latency, the classic carry-lookahead tradeoff.\n- **Division**: brought under **100 time units** through careful operator construction — the hard instruction in any low-level ALU.\n- **ISA design**: immediate variants share opcode families with register forms (clean decode); signed vs unsigned comparison jumps read a shared `flags` register; memory widths (8/16/32) plus persistent memory cover both stack and storage use cases.\n\nThe programs validate the whole stack: Hanoi proves call/ret + stack recursion works; the RNG proves persistent memory and a real PRNG; the sorting algorithm exercises addressing modes and comparisons; the capitalizer shows the ASCII bit-flip trick in one instruction; Nim encodes mod-4 game theory as a single bitwise AND."
+      },
+      "lessons": {
+        "ru": "- **Важен каждый уровень** — сборка из NAND делает весь стек (тайминг ALU, разрядность шины, декодирование ISA) осязаемым, а не абстрактным.\n- **Оптимизация — это компромисс между задержкой и числом вентилей** — переход от последовательного переноса к Kogge-Stone делает учебную компьютерную архитектуру живой.\n- **Проектирование ISA — это вкус** — инструкции фиксированной ширины, общие семейства опкодов и регистр flags упрощают декодирование и делают программирование разумным.\n- **Процессор по-настоящему существует, только когда на нём выполняется реальный код** — рекурсия, PRNG и игровые боты доказывают, что машина работает от начала до конца.",
+        "en": "- **Every layer matters** — building from NAND makes the whole stack (ALU timing, bus width, ISA decode) tangible, not abstract.\n- **Optimization is a latency/gate tradeoff** — the ripple→Kogge-Stone jump is textbook computer architecture made visceral.\n- **ISA design is taste** — fixed-width instructions, shared opcode families, and a flags register keep decode simple and programming sane.\n- **A CPU is only real when you run real code on it** — recursion, PRNGs, and game bots prove the machine works end-to-end."
+      },
+      "related": {
+        "ru": "- ISA Symphony — набор инструкций\n- программы Symphony — программы\n- Компилятор / Переводчик — родственный низкоуровневый кейс (компиляторы)\n- о Lily — контекст об авторе\n- модель кейс-стади — модель, которой следует этот кейс",
+        "en": "- symphony-isa — the ISA\n- symphony-programs — the programs\n- compiler-translator — the sibling low-level case (compilers)\n- about-lily — builder context\n- case-study-model — the model this case follows"
+      },
+      "updated": "2026-08-16"
+    },
+    {
+      "id": "compression-algorithms",
+      "theme": "algorithms",
+      "order": 8,
+      "featured": false,
+      "audience": "depth",
       "title": {
         "ru": "Алгоритмы сжатия",
         "en": "Compression Algorithms"
@@ -446,76 +594,11 @@
       "updated": "2026-08-16"
     },
     {
-      "id": "neural-net-from-scratch",
-      "theme": "ai",
-      "order": 7,
-      "featured": true,
-      "title": {
-        "ru": "Нейросеть с нуля",
-        "en": "Neural Net from Scratch"
-      },
-      "stack": [
-        "Vanilla JavaScript",
-        "HTML",
-        "CSS",
-        "Canvas (no libraries",
-        "no build step)"
-      ],
-      "evidence": [
-        {
-          "url": "https://github.com/IonShieldQuad/Evasion-learning",
-          "label": "github.com"
-        }
-      ],
-      "status": "draft",
-      "lang": "en",
-      "translation": {
-        "ru": "machine",
-        "en": "source"
-      },
-      "overview": {
-        "ru": "Нейронная сеть, полностью написанная с нуля на **чистом JavaScript — без единой библиотеки**, — которая учится играть в игру с уклонением от блоков. Шарик на сетке избегает падающих препятствий, обучаясь **одновременно** методом обратного распространения ошибки и **нейрогенетическим (эволюционным)** алгоритмом. Четыре функции активации, настраиваемая архитектура, узлы памяти и живая визуализация в браузере. Создано, чтобы по-настоящему понять, что такое машинное обучение, с первых принципов.",
-        "en": "A neural network built entirely from scratch in **vanilla JavaScript — zero libraries** — that learns to play a dodge-the-blocks game. A ball on a grid avoids falling obstacles, trained by **both** backpropagation and a **neurogenetic (evolutionary)** algorithm. Four activation functions, configurable architecture, memory nodes, and live visualization in the browser. Built to genuinely understand what machine learning is, from first principles."
-      },
-      "role": {
-        "ru": "Единственный разработчик — архитектура сети, оба алгоритма обучения, визуализация. Проект для самообразования.",
-        "en": "Solo developer — network architecture, both learning algorithms, visualization. Self-study project."
-      },
-      "problem": {
-        "ru": "Мне хотелось понять, чем нейронная сеть на самом деле *является*, — не подключив библиотеку и вызвав `fit()`, а построив само обучение: веса, смещения, прямой проход, обратное распространение ошибки и эволюционную оптимизацию. Задача: сеть, управляющая шариком, который уклоняется от падающих блоков на сетке, обучаясь исключительно на опыте (без вручную заданных правил).",
-        "en": "I wanted to know what a neural network actually *is* — not by importing a library and calling `fit()`, but by building learning itself: weights, biases, feed-forward, error backpropagation, and evolutionary optimization. The challenge: a network that controls a ball dodging falling blocks on a grid, learning purely from experience (no hand-coded rules)."
-      },
-      "solution": {
-        "ru": "Написанный вручную класс `Network` плюс две полноценные стратегии обучения:\n\n- **Архитектура**: слои узлов со взвешенными связями и смещениями; настраиваемые скрытые слои; типы входных/выходных/запоминающих узлов; полный прямой проход `process()`. Настраиваемые функции активации (sigmoid, ReLU, Leaky ReLU, softplus), каждая со своей производной для обратного распространения.\n- **Режим обратного распространения**: распространение ошибки от выхода назад через слои, накопление градиента по обучающей выборке, дельты весов и смещений, масштабированные скоростью обучения, затем применение — полноценный тренер градиентного спуска, написанный вручную.\n- **Режим эволюции (нейрогенетический)**: популяция сетей, каждая оценивается за проход; лучшая половина клонируется со случайной мутацией на каждой итерации — выживание сильнейших как альтернатива градиентам.\n- **Узлы памяти**: настраиваемый набор рекуррентных связей, возвращающих состояние выхода обратно на вход, что даёт сети подобие кратковременной памяти.\n- **Игра**: 24 входа со сканируемой сетки соседних клеток, 3 выхода (остаться / влево / вправо); отрисовка на canvas с живыми показателями счёта, прохода и итерации; «быстрый режим» для прогона тысяч итераций за короткое время.",
-        "en": "A hand-built `Network` class plus two complete training strategies:\n\n- **Architecture**: layered nodes with weighted links and biases; configurable hidden layers; input/output/memory node types; full feed-forward `process()`. Configurable activation functions (sigmoid, ReLU, Leaky ReLU, softplus) each with its derivative for backprop.\n- **Backprop mode**: error propagation from output back through the layers, gradient accumulation across a training batch, weight/bias deltas scaled by a learning rate, then applied — a complete gradient-descent trainer written by hand.\n- **Evolution (neurogenetic) mode**: a population of networks, each scored per pass; the best half is cloned with random mutation each iteration — survival of the fittest as an alternative to gradients.\n- **Memory nodes**: a configurable set of recurrent connections feeding output state back into the input, giving the network a form of short-term memory.\n- **Game**: 24 inputs from a scanned neighborhood grid, 3 outputs (stay / move left / move right); canvas rendering with live score, pass, and iteration readouts; a \"quick mode\" to run thousands of iterations rapidly."
-      },
-      "timeline": {
-        "ru": "2017, проект для самообразования.",
-        "en": "2017, self-study project."
-      },
-      "impact": {
-        "ru": "- **Обучение видно невооружённым глазом**: сеть заметно улучшается от итерации к итерации — шарик выживает всё дольше, обучаясь и обратным распространением, и эволюцией.\n- **Две парадигмы обучения в одной кодовой базе**: и обратное распространение, и нейрогенетическая эволюция реализованы с нуля и взаимозаменяемы.\n- **Никаких внешних зависимостей**: весь ML-стек написан вручную.\n- Честные границы: проект для самообразования; количественная запись результатов не сохранилась.",
-        "en": "- **Demonstrably learns**: the network visibly improves over iterations — the ball survives progressively longer, trained by both backprop and evolution.\n- **Two learning paradigms, one codebase**: backpropagation and neurogenetic evolution both implemented from scratch and interchangeable.\n- **No external dependencies**: the entire ML stack is hand-written.\n- Honest scope: a self-study project; no quantitative score record preserved."
-      },
-      "deepDive": {
-        "ru": "- **Обратное распространение вручную**: для каждой обучающей пары сеть вычисляет ошибку выходного слоя, распространяет её назад, суммируя взвешенные вклады через каждый слой (правило цепочки), затем накапливает градиенты по каждой связи в пределах выборки и применяет `weight += -learningRate * gradient`. Дельты смещений и весов отслеживаются отдельно.\n- **Нейрогенетический цикл**: оценить каждую сеть по времени выживания, отсортировать популяцию, клонировать лучшую половину с мутацией в остальные особи, перемешать — обучение без какой-либо информации о градиенте.\n- **Производные активаций**: sigmoid, ReLU, Leaky ReLU и softplus — каждая поставляет путь `d` (производную), чтобы обратное распространение могло провести ошибку через нелинейности.\n- **Узлы памяти**: ячейки выходного слоя замыкаются обратно на входной слой, поэтому следующее решение сети зависит от её собственного предыдущего состояния — рекуррентная нотка в остальном прямом дизайне.",
-        "en": "- **Backprop by hand**: for each training pair the network computes the output-layer error, propagates it backwards by summing weighted contributions through each layer (chain rule), then accumulates per-connection gradients across the batch and applies `weight += -learningRate * gradient`. Bias and weight deltas are tracked separately.\n- **Neurogenetic loop**: score each network on survival, sort the population, clone the top half with mutation into the rest, reshuffle — learning without any gradient information.\n- **Activation derivatives**: sigmoid, ReLU, Leaky ReLU, and softplus each ship a `d` (derivative) path so backprop can propagate error through nonlinearities.\n- **Memory nodes**: output-layer cells loop back into the input layer, so the network's next decision depends on its own previous state — a recurrent flavor in an otherwise feed-forward design."
-      },
-      "lessons": {
-        "ru": "- **Написать обратное распространение самому — переломный опыт** — реализовав правило цепочки самостоятельно, начинаешь понимать его конкретно; вызов библиотеки не учит ничему из этого.\n- **Два пути к одному поведению** — и градиентный спуск, и эволюция дали обучение, но с очень разной динамикой; увидеть оба рядом — целое образование в области оптимизации.\n- **Чистого JS достаточно** — настоящему машинному обучению не нужен фреймворк; несколько сотен строк простого кода способны учиться.\n- **Визуализация — это обратная связь** — наблюдение за растущим счётом на canvas делало обучение наглядным и мотивировало настройку.",
-        "en": "- **Writing backprop is transformative** — implementing the chain rule yourself makes it concrete; a library call teaches none of it.\n- **Two paths to the same behavior** — gradient descent and evolution both produced learning, but with very different dynamics; seeing both side by side is an education in optimization.\n- **Vanilla JS is enough** — real machine learning needs no framework; a few hundred lines of plain code can learn.\n- **Visualization is feedback** — watching the score climb on canvas made the learning legible and motivated tuning."
-      },
-      "related": {
-        "ru": "- ИИ-агенты и автоматизация — там продолжается подход «ИИ с первых принципов»\n- Процессор из NAND — ещё одна сборка с первых принципов\n- о Lily — практикующий специалист по ИИ, стоящий за этим\n- модель кейс-стади — модель, которой следует этот кейс",
-        "en": "- ai-agents-automation — the first-principles AI ethos continues there\n- cpu-from-nand — another from-first-principles build\n- about-lily — the AI practitioner behind it\n- case-study-model — the model this case follows"
-      },
-      "updated": "2026-08-16"
-    },
-    {
       "id": "sorting-visualizer",
       "theme": "algorithms",
-      "order": 8,
+      "order": 9,
       "featured": false,
+      "audience": "depth",
       "title": {
         "ru": "Визуализатор сортировок",
         "en": "Sorting Visualizer"
@@ -574,80 +657,6 @@
       "related": {
         "ru": "- Алгоритмы сжатия — парный кейс по алгоритмам\n- Нейросеть с нуля — ещё один JS-проект, написанный с нуля\n- О Лили — контекст автора\n- Модель кейс-стади — модель, которой следует этот кейс",
         "en": "- compression-algorithms — the sibling algorithms case\n- neural-net-from-scratch — another from-scratch JS project\n- about-lily — builder context\n- case-study-model — the model this case follows"
-      },
-      "updated": "2026-08-16"
-    },
-    {
-      "id": "android-apps",
-      "theme": "mobile",
-      "order": 10,
-      "featured": false,
-      "title": {
-        "ru": "Android-приложения",
-        "en": "Android Apps"
-      },
-      "stack": [
-        "Java",
-        "Android SDK",
-        "Gradle",
-        "Room ORM",
-        "Google Maps SDK",
-        "SQLite",
-        "ViewBinding",
-        "LiveData/ViewModel",
-        "RecyclerView"
-      ],
-      "evidence": [
-        {
-          "url": "https://github.com/IonShieldQuad/Planner",
-          "label": "github.com"
-        },
-        {
-          "url": "https://github.com/IonShieldQuad/Tetris",
-          "label": "github.com"
-        }
-      ],
-      "status": "draft",
-      "lang": "en",
-      "translation": {
-        "ru": "machine",
-        "en": "source"
-      },
-      "overview": {
-        "ru": "Два законченных Android-приложения, созданных во время учёбы в университете: **Planner** — приложение для планирования дневных поездок на Room и Google Maps, и **Tetris** — полноценная игра с кастомным рендерингом и системой рекордов на SQLite. Оба — настоящие Gradle-проекты с правильной структурой приложения, свидетельство мобильной разработки наряду с десктопной и веб-работой.",
-        "en": "Two complete Android applications built during university studies: **Planner**, a daily trip-planning app using Room and Google Maps, and **Tetris**, a full playable game with custom rendering and a SQLite high-score system. Both are real Gradle projects with proper app structure — evidence of mobile development alongside the desktop and web work."
-      },
-      "role": {
-        "ru": "Соло-разработчик — оба приложения спроектированы и собраны от начала до конца.",
-        "en": "Solo developer — both apps designed and built end to end."
-      },
-      "problem": {
-        "ru": "Учёба в университете включала создание реальных Android-приложений. Возникли две разные задачи: утилита, которой нужны локальное хранение данных и реальные картографические данные (Planner), и игра, которой нужны рабочий игровой цикл, кастомная графика и сохранение результатов (Tetris).",
-        "en": "University studies included building real Android applications. Two distinct problems emerged: a utility app that needed local data persistence plus real-world map data (Planner), and a game that needed a working game loop, custom graphics, and score persistence (Tetris)."
-      },
-      "solution": {
-        "ru": "### Planner — планирование дневных поездок (`com.ionshield.planner`)\n\n- Слой данных на **Room ORM**: 10 сущностей (`Plan`, `Event`, `Location`, `Node`, `Note`, `Constraint`, `Type` плюс связующие таблицы) с DAO и репозиториями (`PlannerRepository`, `PathRepository`).\n- **Интеграция с Google Maps**: `play-services-maps`, `play-services-location` и `google-maps-services` — картографические данные были практически необходимы для функций планирования.\n- **Современный Android-стек**: ViewBinding, LiveData/ViewModel, RecyclerView, компоненты Material, Preferences.\n- Работало как функциональный MVP — честная оговорка: UX был сырым.\n\n### Tetris — полноценная игра (`com.ionshield.tetris`)\n\n- **Кастомный игровой рендеринг**: `TetrisView` (игровое поле) и `NextShapeView` (превью), управляемые игровым циклом `TetrisController`.\n- **Несколько активити**: экраны меню, игры, настроек и результатов, плюс `ResultAdapter`.\n- **Рекорды на SQLite**: `DatabaseContract` + `DatabaseHelper`.\n- UI-мелочи вроде `RepeatListener` для автоповтора клавиш и `PointInt2D` для координат на поле.",
-        "en": "### Planner — daily trip planning (`com.ionshield.planner`)\n\n- **Room ORM** data layer: 10 entities (`Plan`, `Event`, `Location`, `Node`, `Note`, `Constraint`, `Type`, plus join tables) with DAOs and repositories (`PlannerRepository`, `PathRepository`).\n- **Google Maps integration**: `play-services-maps`, `play-services-location`, and `google-maps-services` — map data was required for the planning features in practice.\n- **Modern Android stack**: ViewBinding, LiveData/ViewModel, RecyclerView, Material components, Preferences.\n- Worked as a functional MVP — honest note: the UX was rough.\n\n### Tetris — a full game (`com.ionshield.tetris`)\n\n- **Custom game rendering**: `TetrisView` (the board) and `NextShapeView` (preview), driven by a `TetrisController` game loop.\n- **Multiple activities**: menu, game, settings, and results screens, plus a `ResultAdapter`.\n- **SQLite high scores**: `DatabaseContract` + `DatabaseHelper`.\n- UI niceties like `RepeatListener` for key repeat and `PointInt2D` for board coordinates."
-      },
-      "timeline": {
-        "ru": "2020, университетский курс (Planner 2020-06, Tetris 2020-09).",
-        "en": "2020, university coursework (Planner 2020-06, Tetris 2020-09)."
-      },
-      "impact": {
-        "ru": "- **Два законченных собираемых Android-приложения** с настоящей структурой (активити, слои данных, кастомные вью)\n- **Planner**: база данных Room + интеграция с Google Maps, работающие как MVP\n- **Tetris**: полноценный игровой цикл с кастомным рендерингом на canvas и сохранением рекордов\n- Честные рамки: университетские проекты, внешних пользователей нет; UX в Planner был сырым",
-        "en": "- **Two complete, buildable Android apps** with real app structure (activities, data layers, custom views)\n- **Planner**: Room database + Google Maps integration working as an MVP\n- **Tetris**: full playable game loop with custom canvas rendering and persistent high scores\n- Honest scope: university projects, no external users; Planner's UX was rough"
-      },
-      "deepDive": {
-        "ru": "- **Два подхода к хранению, намеренно разные**: Planner использует Room (ORM с проверкой на этапе компиляции, DAO и экспортом схемы), а Tetris — чистый SQLite через пару `DatabaseContract`/`DatabaseHelper` — оба варианта обоснованы и подобраны под свою задачу.\n- **Кастомный рендеринг в Tetris**: поле — это кастомный `View`, рисующий прямоугольники ячеек, которым управляет контроллер, владеющий состоянием игры, — чистое разделение модели и представления без игрового движка.\n- **Карты в приложении-планировщике**: сервисы Google Maps для реальных картографических данных (необходимы для планирования поездок на практике), подключённые через конфигурацию подписи Gradle и плагин секретов.\n- **Настоящая гигиена проекта**: `.gitignore`, Gradle wrapper, конфигурации подписи, зависимости тестов JUnit + Espresso, настроенные в обоих приложениях.",
-        "en": "- **Two persistence approaches, deliberately different**: Planner uses Room (compile-time-verified ORM with DAOs and a schema export path), while Tetris uses raw SQLite via a `DatabaseContract`/`DatabaseHelper` pair — both valid choices matched to their need.\n- **Custom rendering for Tetris**: the board is a custom `View` drawing cell rectangles, updated by a controller that owns the game state — a clean model/view split without a game engine.\n- **Maps in a planning app**: Google Maps services for real map data (required for planning trips in practice), wired through the Gradle signing config and the secrets plugin.\n- **Real project hygiene**: `.gitignore`, Gradle wrapper, signing configs, JUnit + Espresso test dependencies configured on both apps."
-      },
-      "lessons": {
-        "ru": "- **Выбор способа хранения следует из задачи** — Room для приложения с большим объёмом данных и связями; чистый SQLite, когда нужна лишь таблица рекордов.\n- **Игровой цикл без движка** — кастомных вью и контроллера достаточно для полноценной игры; рендеринг и состояние можно чисто разделить.\n- **MVP — это функция важнее лоска** — Planner работал, но UX был сырым; приоритет — выпустить рабочий костяк, итерации придут позже.\n- **Мобильная разработка — ещё одна поверхность для тех же основ** — SQL, конечные автоматы и логика UI переносятся; новизна — в платформе.",
-        "en": "- **Persistence choice follows the problem** — Room for a data-heavy app with relations; raw SQLite when all you need is a high-score table.\n- **A game loop without an engine** — custom views + a controller are enough for a full game; rendering and state can stay cleanly separated.\n- **MVP means function over polish** — Planner worked but the UX was rough; shipping a working core is the priority, iteration comes later.\n- **Mobile is another surface for the same fundamentals** — SQL, state machines, and UI logic transfer; the platform is the new part."
-      },
-      "related": {
-        "ru": "- Реестр кейсов — источник этого кластера\n- Алгоритмы сжатия — ещё один кейс из эпохи Java\n- О Лили — контекст автора\n- Модель кейс-стади — модель, которой следует этот кейс",
-        "en": "- case-inventory — source of this cluster\n- compression-algorithms — another Java-era case\n- about-lily — builder context\n- case-study-model — the model this case follows"
       },
       "updated": "2026-08-16"
     }

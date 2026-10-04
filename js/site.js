@@ -172,13 +172,28 @@
   }
 
   function renderProjects() {
-    const host = document.getElementById('case-grid');
-    if (!host) return;
     const list = state.filter === 'all'
       ? state.cases
       : state.cases.filter((c) => c.theme === state.filter);
-    host.innerHTML = list.map(caseCard).join('') ||
-      '<p class="empty-state">no cases in this category yet</p>';
+    const empty = '<p class="empty-state">no cases in this category yet</p>';
+
+    const single = document.getElementById('case-grid');
+    if (single) {
+      single.innerHTML = list.map(caseCard).join('') || empty;
+      observeReveals();
+      return;
+    }
+
+    // projects page: client-applicable work first, engineering depth after
+    [['client', 'case-grid-client', 'group-client'],
+     ['depth', 'case-grid-depth', 'group-depth']].forEach(([aud, gridId, groupId]) => {
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+      const group = document.getElementById(groupId);
+      const subset = list.filter((c) => (c.audience || 'depth') === aud);
+      grid.innerHTML = subset.map(caseCard).join('') || empty;
+      if (group) group.hidden = subset.length === 0;
+    });
     observeReveals();
   }
 

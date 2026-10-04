@@ -64,6 +64,37 @@
         </a>
       </div>
 
+      <div class="holo clip-lg ring" id="lead-form-block" style="margin-top:2rem" hidden>
+        <p class="kicker" data-ru="форма заявки" data-en="contact form">форма заявки</p>
+        <h3 data-ru="Опишите задачу" data-en="Describe the task">Опишите задачу</h3>
+        <form id="lead-form" style="display:grid; gap:.9rem; margin-top:1rem">
+          <label style="display:grid; gap:.3rem">
+            <span class="kicker" data-ru="как к вам обращаться" data-en="your name">как к вам обращаться</span>
+            <input name="name" type="text" maxlength="100" autocomplete="name"
+                   style="padding:.7rem .8rem; background:var(--carbon-2); color:var(--text-on-dark); border:1px solid var(--line-dark); font-family:var(--font-body); font-size:1rem">
+          </label>
+          <label style="display:grid; gap:.3rem">
+            <span class="kicker" data-ru="контакт — telegram или почта" data-en="contact — Telegram or email">контакт — telegram или почта</span>
+            <input name="contact" type="text" required maxlength="200"
+                   style="padding:.7rem .8rem; background:var(--carbon-2); color:var(--text-on-dark); border:1px solid var(--line-dark); font-family:var(--font-body); font-size:1rem">
+          </label>
+          <label style="display:grid; gap:.3rem">
+            <span class="kicker" data-ru="задача" data-en="the task">задача</span>
+            <textarea name="task" rows="5" required minlength="10" maxlength="4000"
+                      style="padding:.7rem .8rem; background:var(--carbon-2); color:var(--text-on-dark); border:1px solid var(--line-dark); font-family:var(--font-body); font-size:1rem; resize:vertical"></textarea>
+          </label>
+          <input name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"
+                 style="position:absolute; left:-9999px; width:1px; height:1px" placeholder="website">
+          <div>
+            <button class="btn btn-primary" type="submit"><span data-ru="отправить" data-en="send">отправить</span></button>
+          </div>
+          <p class="footer-meta" id="lead-form-note" style="color:var(--text-on-dark-dim); margin:0"></p>
+        </form>
+        <p class="footer-meta" style="color:var(--text-on-dark-dim); margin:.8rem 0 0">
+          <a id="relay-status-link" href="#" hidden data-ru="состояние приёмника заявок →" data-en="lead relay status →">состояние приёмника заявок →</a>
+        </p>
+      </div>
+
       <div class="holo clip-lg ring" style="margin-top:2rem">
         <p class="kicker" data-ru="условия" data-en="availability">условия</p>
         <div class="chips">
@@ -94,8 +125,10 @@
   </div>
 </footer>
 
+<script src="site-config.js"></script>
 <script src="data/cases.js"></script>
 <script src="js/ambient.js"></script>
 <script src="js/site.js"></script>
+<script src="js/lead-form.js"></script>
 </body>
 </html>

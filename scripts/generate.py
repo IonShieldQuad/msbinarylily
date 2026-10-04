@@ -243,6 +243,8 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
             "theme": theme,
             "order": order if isinstance(order, int) else 999,
             "featured": bool(fm.get("featured", False)),
+            # who a case speaks to: client-facing work sorts first on the site
+            "audience": str(fm.get("audience", "depth")).strip() or "depth",
             "title": title_pair,
             "stack": stack,
             "evidence": evidence,

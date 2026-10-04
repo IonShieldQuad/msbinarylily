@@ -60,6 +60,17 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       emptyState: document.querySelector('.empty-state')?.textContent?.trim() || null,
       notice: [...document.querySelectorAll('.notice')].filter((el) => !el.hidden).map((el) => el.textContent.trim().slice(0, 50)).join(' | ') || null,
       caseText: (document.querySelector('.case-section .prose, .case-section p')?.textContent || '').slice(0, 80),
+      groups: (() => {
+        const g = (id) => document.querySelectorAll(`#${id} .card`).length;
+        const client = document.getElementById('case-grid-client');
+        if (!client) return null;
+        return { client: g('case-grid-client'), depth: g('case-grid-depth'),
+                 clientVisible: !document.getElementById('group-client')?.hidden };
+      })(),
+      formHidden: (() => {
+        const b = document.getElementById('lead-form-block');
+        return b ? b.hidden : null;
+      })(),
       heroCoverage: (() => {
         const hero = document.querySelector('.hero');
         if (!hero) return null;

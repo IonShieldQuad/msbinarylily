@@ -1,9 +1,8 @@
-/* Interactive hero ambience: a grid of binary glyphs and greebles that lights up
-   under the pointer, cold on the left, hot on the right (the brand's binary
-   duality). Deliberately Canvas2D, not WebGL: glyphs stay crisp, and the cost is
-   paid only where the pointer is, because the base layer is drawn once into an
-   offscreen canvas. `?static` or prefers-reduced-motion removes it entirely and
-   leaves the CSS greeble backdrop. */
+/* Hero ambience: a black circuit board with energy running through its channels.
+   Canvas2D (crisp lines, cheap): the board itself is baked once per resize, and
+   per frame only the pulses are drawn. The pointer lights the channel it is over
+   and accelerates a pulse toward the cursor. `?static` /
+   prefers-reduced-motion remove the canvas entirely, leaving the CSS board. */
 
 (() => {
   'use strict';
@@ -17,141 +16,227 @@
   const ctx = canvas.getContext('2d');
   if (!ctx) { canvas.remove(); return; }
 
-  const CELL = 26;
-  const RADIUS = 175;
-  const GREEBLES = '▪▫◆◇□▣┼╋▤▥';
-  const BASE_ALPHA = 0.19;
+  const CELL = 48;          // board pitch
+  const TRACE_ALPHA = 0.16; // resting brightness of the wiring
+  const PAD_ALPHA = 0.26;
+  const PULSES = 26;
 
-  let W = 0, H = 0, cols = 0, rows = 0, dpr = 1;
-  let base = document.createElement('canvas');
-  let baseCtx = base.getContext('2d');
-  let cells = [];
-  const pointer = { x: -9999, y: -9999, tx: -9999, ty: -9999, active: false, burst: 0 };
-  let raf = 0, lastDraw = 0, lastPointer = 0;
-  const HOTSPOTS = [];
+  const COLD = [0, 229, 255], MID = [124, 77, 255], HOT = [255, 61, 94];
+  const rgb = (c, a) => `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${a})`;
 
-  /* cold -> violet -> hot across the width: the binary pole split */
-  const COLD = [47, 123, 255], VIOLET = [124, 77, 255], HOT = [255, 61, 94];
-  const mix = (a, b, t) => [
-    Math.round(a[0] + (b[0] - a[0]) * t),
-    Math.round(a[1] + (b[1] - a[1]) * t),
-    Math.round(a[2] + (b[2] - a[2]) * t),
-  ];
-  const poleColor = (t) => (t < 0.5 ? mix(COLD, VIOLET, t * 2) : mix(VIOLET, HOT, (t - 0.5) * 2));
+  let W = 0, H = 0, dpr = 1;
+  const base = document.createElement('canvas');
+  const baseCtx = base.getContext('2d');
+  let traces = [];      // { pts:[{x,y}], len, cum:[], lane: 0..1, hot: bool }
+  let pads = [];
+  let greebles = [];
+  let pulses = [];
+  const pointer = { x: -9999, y: -9999, tx: -9999, ty: -9999, active: false };
+  let lastPointer = 0, raf = 0, lastDraw = 0;
 
-  function build() {
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    const w = canvas.clientWidth || 1200;
-    const h = canvas.clientHeight || 600;
-    canvas.width = Math.floor(w * dpr);
-    canvas.height = Math.floor(h * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    W = w; H = h;
-    cols = Math.ceil(w / CELL) + 1;
-    rows = Math.ceil(h / CELL) + 1;
+  const laneColor = (lane) => (lane < 0.5
+    ? [COLD[0] + (MID[0] - COLD[0]) * lane * 2, COLD[1] + (MID[1] - COLD[1]) * lane * 2, COLD[2] + (MID[2] - COLD[2]) * lane * 2]
+    : [MID[0] + (HOT[0] - MID[0]) * (lane - 0.5) * 2, MID[1] + (HOT[1] - MID[1]) * (lane - 0.5) * 2, MID[2] + (HOT[2] - MID[2]) * (lane - 0.5) * 2]);
 
-    cells = [];
-    for (let r = 0; r < rows; r++) {
-      const row = [];
-      for (let c = 0; c < cols; c++) {
-        const roll = Math.random();
-        row.push({
-          glyph: roll < 0.72 ? (Math.random() < 0.5 ? '0' : '1')
-            : roll < 0.9 ? '·' : GREEBLES[(Math.random() * GREEBLES.length) | 0],
-          greeble: roll >= 0.9,
-          phase: Math.random() * Math.PI * 2,
-        });
+  function buildTraces() {
+    traces = [];
+    pads = [];
+    greebles = [];
+    const gx = Math.floor(W / CELL), gy = Math.floor(H / CELL);
+    const snap = (v) => Math.round(v / CELL) * CELL;
+
+    const makePath = (x, y, steps, lane, hot) => {
+      const pts = [{ x, y }];
+      for (let i = 0; i < steps; i++) {
+        const r = Math.random();
+        const cur = pts[pts.length - 1];
+        let nx = cur.x, ny = cur.y;
+        if (r < 0.45) nx += (Math.random() < 0.5 ? -1 : 1) * CELL;      // straight run
+        else if (r < 0.75) ny += (Math.random() < 0.5 ? -1 : 1) * CELL;
+        else { nx += (Math.random() < 0.5 ? -1 : 1) * CELL; ny += (Math.random() < 0.5 ? -1 : 1) * CELL; } // 45° jog
+        nx = Math.max(CELL, Math.min(W - CELL, nx));
+        ny = Math.max(CELL, Math.min(H - CELL, ny));
+        if (nx === cur.x && ny === cur.y) continue;
+        // keep runs axis-aligned or 45°, never arbitrary angles
+        if (nx !== cur.x && ny !== cur.y) {
+          const d = Math.min(Math.abs(nx - cur.x), Math.abs(ny - cur.y));
+          nx = cur.x + Math.sign(nx - cur.x) * d;
+          ny = cur.y + Math.sign(ny - cur.y) * d;
+        }
+        pts.push({ x: nx, y: ny });
       }
-      cells.push(row);
+      if (pts.length < 3) return null;
+      const cum = [0];
+      for (let i = 1; i < pts.length; i++) {
+        cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+      }
+      return { pts, cum, len: cum[cum.length - 1], lane, hot };
+    };
+
+    const count = Math.max(10, Math.round((W * H) / 260000) * 3);
+    for (let i = 0; i < count; i++) {
+      const lane = Math.random();
+      const hot = i === 2;   // exactly one hot lane on the board
+      const t = makePath(snap(Math.random() * W), snap(Math.random() * H), 3 + ((Math.random() * 4) | 0), hot ? 0.93 : lane * 0.62, hot);
+      if (t) traces.push(t);
     }
 
-    /* a few permanent glows, so the field has structure rather than an even
-       noise floor; baked into the base layer, so they cost nothing per frame */
-    HOTSPOTS.length = 0;
-    [[0.16, 0.68, 150], [0.62, 0.24, 135], [0.88, 0.74, 160], [0.36, 0.18, 120]]
-      .forEach(([fx, fy, r]) => HOTSPOTS.push({ x: fx * W, y: fy * H, r }));
+    // solder pads at trace joints
+    traces.forEach((t) => {
+      t.pts.forEach((p, i) => {
+        if (i % 2 === 0 && Math.random() < 0.5) pads.push({ x: p.x, y: p.y, r: 2 + Math.random() * 1.6 });
+      });
+    });
 
-    /* base layer: every cell at its dim resting alpha, drawn once */
+    // greebles: small angular machinery, axis-aligned only
+    for (let i = 0; i < 26; i++) {
+      const w = CELL * (0.35 + Math.random() * 0.7);
+      const h = CELL * (0.2 + Math.random() * 0.5);
+      greebles.push({
+        x: snap(Math.random() * W), y: snap(Math.random() * H),
+        w: Math.round(w), h: Math.round(h),
+        rows: 1 + ((Math.random() * 3) | 0),
+      });
+    }
+
+    pulses = [];
+    for (let i = 0; i < PULSES; i++) pulses.push(spawnPulse());
+  }
+
+  function spawnPulse() {
+    const t = traces[(Math.random() * traces.length) | 0];
+    return { t, s: Math.random() * t.len, v: 55 + Math.random() * 95, boost: 0 };
+  }
+
+  function pointAt(t, s) {
+    const d = Math.max(0, Math.min(t.len, s));
+    let i = 1;
+    while (i < t.cum.length - 1 && t.cum[i] < d) i++;
+    const a = t.pts[i - 1], b = t.pts[i];
+    const seg = t.cum[i] - t.cum[i - 1] || 1;
+    const k = (d - t.cum[i - 1]) / seg;
+    return { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k };
+  }
+
+  function distanceToTrace(t, x, y) {
+    let best = 1e9;
+    for (let i = 1; i < t.pts.length; i++) {
+      const a = t.pts[i - 1], b = t.pts[i];
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const l2 = dx * dx + dy * dy || 1;
+      let k = ((x - a.x) * dx + (y - a.y) * dy) / l2;
+      k = Math.max(0, Math.min(1, k));
+      const px = a.x + dx * k, py = a.y + dy * k;
+      best = Math.min(best, Math.hypot(px - x, py - y));
+    }
+    return best;
+  }
+
+  function drawBoard() {
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = canvas.clientWidth || 1200;
+    H = canvas.clientHeight || 620;
+    canvas.width = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     base.width = canvas.width;
     base.height = canvas.height;
     baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     baseCtx.clearRect(0, 0, W, H);
-    baseCtx.font = '12px "JetBrains Mono", ui-monospace, monospace';
-    baseCtx.textBaseline = 'middle';
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const cell = cells[r][c];
-        const x = c * CELL + 6, y = r * CELL + 13;
-        let a = BASE_ALPHA;
-        let col = '214, 236, 246';
-        for (const h of HOTSPOTS) {
-          const d = Math.hypot(x - h.x, y - h.y);
-          if (d < h.r) {
-            const fall = (1 - d / h.r) ** 2 * 0.38;
-            if (fall > 0) {
-              const [rr, gg, bb] = poleColor(x / W);
-              a = Math.max(a, BASE_ALPHA + fall);
-              col = `${rr}, ${gg}, ${bb}`;
-            }
-          }
-        }
-        baseCtx.fillStyle = `rgba(${col}, ${a})`;
-        baseCtx.fillText(cell.glyph, x, y);
+
+    buildTraces();
+
+    baseCtx.lineCap = 'square';
+    traces.forEach((t) => {
+      const col = laneColor(t.lane);
+      baseCtx.beginPath();
+      baseCtx.moveTo(t.pts[0].x, t.pts[0].y);
+      for (let i = 1; i < t.pts.length; i++) baseCtx.lineTo(t.pts[i].x, t.pts[i].y);
+      baseCtx.lineWidth = t.hot ? 2 : 1;
+      baseCtx.strokeStyle = rgb(col, t.hot ? TRACE_ALPHA * 1.5 : TRACE_ALPHA);
+      baseCtx.stroke();
+    });
+
+    pads.forEach((p) => {
+      baseCtx.beginPath();
+      baseCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      baseCtx.fillStyle = `rgba(226, 238, 248, ${PAD_ALPHA})`;
+      baseCtx.fill();
+      baseCtx.beginPath();
+      baseCtx.arc(p.x, p.y, p.r + 3, 0, Math.PI * 2);
+      baseCtx.strokeStyle = `rgba(226, 238, 248, 0.06)`;
+      baseCtx.stroke();
+    });
+
+    greebles.forEach((g) => {
+      baseCtx.strokeStyle = 'rgba(206, 226, 240, 0.14)';
+      baseCtx.lineWidth = 1;
+      baseCtx.strokeRect(g.x, g.y, g.w, g.h);
+      for (let i = 1; i < g.rows; i++) {
+        const y = g.y + (g.h / g.rows) * i;
+        baseCtx.beginPath();
+        baseCtx.moveTo(g.x + 2, y);
+        baseCtx.lineTo(g.x + g.w - 2, y);
+        baseCtx.stroke();
       }
-    }
+    });
   }
 
   function draw(now) {
     raf = requestAnimationFrame(draw);
-    if (now - lastDraw < 33) return;           // ~30fps is plenty for ambience
+    if (now - lastDraw < 33) return;
+    const dt = Math.min(0.05, (now - lastDraw) / 1000 || 0.033);
     lastDraw = now;
 
-    // no mouse for a while? sweep the light across so the texture is alive and
-    // the interactivity is discoverable instead of looking like static noise
-    if (now - lastPointer > 2500) {
-      pointer.tx = W * (0.5 + 0.4 * Math.sin(now / 6500));
-      pointer.ty = H * (0.48 + 0.14 * Math.sin(now / 9000));
+    if (now - lastPointer > 2600) {           // idle: the board keeps working
+      pointer.tx = W * (0.5 + 0.34 * Math.sin(now / 7000));
+      pointer.ty = H * (0.5 + 0.22 * Math.sin(now / 5200));
       pointer.active = true;
     }
-    pointer.x += (pointer.tx - pointer.x) * 0.18;
-    pointer.y += (pointer.ty - pointer.y) * 0.18;
-    if (pointer.burst > 0) pointer.burst *= 0.94;
+    pointer.x += (pointer.tx - pointer.x) * 0.15;
+    pointer.y += (pointer.ty - pointer.y) * 0.15;
 
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(base, 0, 0, W, H);
 
-    const radius = RADIUS + pointer.burst * 260;
-    const c0 = Math.max(0, Math.floor((pointer.x - radius) / CELL));
-    const c1 = Math.min(cols - 1, Math.ceil((pointer.x + radius) / CELL));
-    const r0 = Math.max(0, Math.floor((pointer.y - radius) / CELL));
-    const r1 = Math.min(rows - 1, Math.ceil((pointer.y + radius) / CELL));
-
-    ctx.font = '12px "JetBrains Mono", ui-monospace, monospace';
-    ctx.textBaseline = 'middle';
-
+    // channels near the cursor light up and their pulses speed toward it
+    const R = 150;
     if (pointer.active) {
-      for (let r = r0; r <= r1; r++) {
-        for (let c = c0; c <= c1; c++) {
-          const cell = cells[r][c];
-          const dx = c * CELL + 6 - pointer.x;
-          const dy = r * CELL + 13 - pointer.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d > radius) continue;
-          const fall = 1 - d / radius;
-          const pulse = 0.5 + 0.5 * Math.sin(now / 900 + cell.phase);
-          const a = Math.min(0.95, fall * fall * (0.55 + 0.45 * pulse) + pointer.burst * 0.25);
-          const [rr, gg, bb] = poleColor((c * CELL) / W);
-          ctx.fillStyle = `rgba(${rr}, ${gg}, ${bb}, ${a})`;
-          if (cell.greeble) {
-            ctx.fillRect(c * CELL + 4, r * CELL + 5, 16, 16);
-            ctx.fillStyle = `rgba(11, 12, 16, ${a * 0.85})`;
-            ctx.fillRect(c * CELL + 7, r * CELL + 8, 10, 10);
-          } else {
-            ctx.fillText(cell.glyph, c * CELL + 6, r * CELL + 13);
-          }
-        }
-      }
+      traces.forEach((t) => {
+        const d = distanceToTrace(t, pointer.x, pointer.y);
+        if (d > R) return;
+        const k = (1 - d / R) ** 2;
+        const col = laneColor(t.lane);
+        ctx.beginPath();
+        ctx.moveTo(t.pts[0].x, t.pts[0].y);
+        for (let i = 1; i < t.pts.length; i++) ctx.lineTo(t.pts[i].x, t.pts[i].y);
+        ctx.lineWidth = t.hot ? 2 : 1;
+        ctx.strokeStyle = rgb(col, 0.5 * k);
+        ctx.stroke();
+      });
     }
+
+    pulses.forEach((p) => {
+      const near = pointer.active ? Math.max(0, 1 - distanceToTrace(p.t, pointer.x, pointer.y) / (R * 1.6)) : 0;
+      p.s += p.v * dt * (1 + near * 5);
+      if (p.s > p.t.len) Object.assign(p, spawnPulse(), { s: 0 });
+      const head = pointAt(p.t, p.s);
+      const tail = pointAt(p.t, p.s - (34 + near * 70));
+      const col = p.t.hot ? [224, 92, 110] : laneColor(p.t.lane);   // muted: a signal, not a spotlight
+      const g = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y);
+      g.addColorStop(0, rgb(col, 0));
+      g.addColorStop(1, rgb(col, 0.55 + near * 0.45));
+      ctx.beginPath();
+      ctx.moveTo(tail.x, tail.y);
+      ctx.lineTo(head.x, head.y);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = g;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(head.x, head.y, 2.1 + near * 1.6, 0, Math.PI * 2);
+      ctx.fillStyle = rgb(col, 0.75 + near * 0.25);
+      ctx.fill();
+    });
   }
 
   const hero = canvas.closest('.hero') || canvas.parentElement;
@@ -163,12 +248,9 @@
     if (!pointer.active) { pointer.x = pointer.tx; pointer.y = pointer.ty; pointer.active = true; }
   }, { passive: true });
   hero.addEventListener('pointerleave', () => { pointer.active = false; });
-  hero.addEventListener('pointerdown', () => { pointer.burst = 1; });
-
-  const onResize = () => { build(); };
-  window.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('resize', () => drawBoard(), { passive: true });
   reduced.addEventListener('change', (e) => { if (e.matches) { cancelAnimationFrame(raf); canvas.remove(); } });
 
-  build();
+  drawBoard();
   raf = requestAnimationFrame(draw);
 })();
