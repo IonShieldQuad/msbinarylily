@@ -4,7 +4,7 @@ window.MBL_CASES = {
     "generated_at": "2026-08-27T16:09:58Z",
     "source": "H:/ObsidianVaultCentral/Work/Personal/portfolio-site/cases",
     "schema_version": "1",
-    "case_count": 10
+    "case_count": 9
   },
   "cases": [
     {
@@ -575,68 +575,6 @@ window.MBL_CASES = {
       "related": {
         "ru": "- Алгоритмы сжатия — парный кейс по алгоритмам\n- Нейросеть с нуля — ещё один JS-проект, написанный с нуля\n- О Лили — контекст автора\n- Модель кейс-стади — модель, которой следует этот кейс",
         "en": "- compression-algorithms — the sibling algorithms case\n- neural-net-from-scratch — another from-scratch JS project\n- about-lily — builder context\n- case-study-model — the model this case follows"
-      },
-      "updated": "2026-08-16"
-    },
-    {
-      "id": "pid-industrial-control",
-      "theme": "industrial",
-      "order": 9,
-      "featured": false,
-      "title": {
-        "ru": "ПИД-регулятор и промышленная автоматика",
-        "en": "PID & Industrial Control"
-      },
-      "stack": [
-        "PID control theory",
-        "code-based PID implementation",
-        "process simulation",
-        "Zelio Soft 2",
-        "ladder",
-        "FBD"
-      ],
-      "evidence": [],
-      "status": "draft",
-      "lang": "en",
-      "translation": {
-        "ru": "machine",
-        "en": "source"
-      },
-      "overview": {
-        "ru": "Практический опыт работы с промышленными системами управления: реализовал **ПИД-регулятор с нуля** и вручную настроил его на модели процесса, а также программировал интеллектуальные реле **Schneider Electric Zelio Logic** (ladder / FBD) в университетской лаборатории. Честные рамки — твёрдое понимание теории ПИД и реальная практика настройки, но сохранённого кода или записей о настройке нет.",
-        "en": "Hands-on experience with industrial control systems: implemented a **PID controller from scratch** and tuned it manually on a simulated process, plus programmed **Schneider Electric Zelio Logic** smart relays (ladder / FBD) in a university lab. Honest about scope — solid understanding of PID theory and real tuning practice, but no preserved code or tuning records."
-      },
-      "role": {
-        "ru": "В одиночку — самообразование (реализация ПИД + ручная настройка) и университетская лаборатория (программирование реле Schneider).",
-        "en": "Solo — self-study (PID implementation + manual tuning) and university lab (Schneider relay programming)."
-      },
-      "problem": {
-        "ru": "Мне хотелось по-настоящему понять, как работают промышленные контуры управления — не просто заучить уравнение ПИД, но *реализовать* регулятор в коде, прогнать его на модели процесса и научиться настраивать вручную. Отдельно университетская лаборатория дала мне в руки реальное промышленное оборудование: программируемые интеллектуальные реле Schneider Electric — рабочие лошадки малых систем автоматизации.",
-        "en": "I wanted to genuinely understand how industrial control loops work — not just memorize the PID equation, but *implement* a controller in code, run it against a simulated process, and learn to tune it by hand. Separately, a university lab put real industrial controller hardware in front of me: Schneider Electric's programmable smart relays, which are the everyday workhorses of small automation systems."
-      },
-      "solution": {
-        "ru": "### ПИД с нуля (самообразование)\n\n- Реализовал ПИД-регулятор в коде (пропорциональная, интегральная и дифференциальная составляющие) с самых основ — цикл обновления по ошибке, накопление интеграла, производная по сигналу ошибки.\n- Прогнал его на модели процесса и **вручную настроил** коэффициенты, наблюдая за откликом: перерегулирование, время установления и колебания подсказывали, какой член увеличить, а какой урезать.\n\n### Реле Schneider Zelio Logic (университетская лаборатория)\n\n- Программировал интеллектуальные реле **Schneider Electric Zelio Logic** (линейка SR2/SR3 — компактные программируемые реле с 10–40 входами/выходами) для простой задачи управления/автоматизации.\n- Использовал **Zelio Soft 2** с программированием на **ladder и/или FBD** (диаграммы функциональных блоков), проверял через режимы симуляции и мониторинга в этой среде.",
-        "en": "### PID from scratch (self-study)\n\n- Implemented a PID controller in code (proportional, integral, derivative terms) from first principles — the error-driven update loop, integral accumulation, derivative on the error signal.\n- Ran it against a simulated process and **manually tuned** the gains by observing the response: overshoot, settling time, and oscillation told me whether to raise or cut each term.\n\n### Schneider Zelio Logic relay (university lab)\n\n- Programmed **Schneider Electric Zelio Logic** smart relays (the SR2/SR3 range — compact programmable relays with 10–40 I/O) for a simple control/automation task.\n- Used **Zelio Soft 2** with **ladder and/or FBD** (function block diagram) programming, verified via the software's simulation/monitoring modes."
-      },
-      "timeline": {
-        "ru": "Университетские годы (~2018–2022), параллельно с курсом по Java/алгоритмам.",
-        "en": "University-era (~2018–2022), alongside the Java/algorithms coursework."
-      },
-      "impact": {
-        "ru": "- **Продемонстрированное понимание**: реализовал рабочий ПИД и вручную настроил его по наблюдениям — тот практический навык работы с контуром управления, которому книги в одиночку не научат.\n- **Реальный контакт с железом**: программировал интеллектуальные реле Schneider в экосистеме промышленного ПО (Zelio Soft 2, ladder/FBD).\n- Честные рамки: университетская лаборатория; конкретная программа для реле не сохранена.",
-        "en": "- **Demonstrated understanding**: implemented a working PID and manually tuned it by observation — the hands-on control-loop skill that books can't teach alone.\n- **Real hardware exposure**: programmed Schneider smart relays in an industrial-software ecosystem (Zelio Soft 2, ladder/FBD).\n- Honest scope: a university lab; the specific relay program is not preserved."
-      },
-      "deepDive": {
-        "ru": "- **ПИД на практике**: регулятор вычисляет `output = Kp·e + Ki·∫e dt + Kd·de/dt`; искусство — в коэффициентах. Ручная настройка означает менять каждый член и читать отклик объекта — поднимать Kp, пока не начнутся колебания, затем отступить; добавлять Ki, чтобы убрать статическую ошибку; добавлять Kd, чтобы погасить перерегулирование.\n- **Экосистема Zelio**: программируемые интеллектуальные реле заменяют жёстко зашитую логику программами на ladder или FBD в Zelio Soft 2, с симуляцией и мониторингом в реальном времени — более мягкое введение в промышленное программирование, чем полноценные ПЛК, но настоящая логика автоматизации.",
-        "en": "- **PID in practice**: the controller computes `output = Kp·e + Ki·∫e dt + Kd·de/dt`; the art is in the gains. Manual tuning means pushing each term and reading the plant's response — raise Kp until it oscillates, back off; add Ki to kill steady-state error; add Kd to damp overshoot.\n- **The Zelio ecosystem**: programmable smart relays replace hard-wired logic with ladder or FBD programs in Zelio Soft 2, complete with simulation and live monitoring — a gentler introduction to industrial programming than full PLCs, but real automation logic."
-      },
-      "lessons": {
-        "ru": "- **Ручная настройка — это интуиция, построенная на наблюдении** — кривые отклика учат большему, чем уравнение.\n- **Управление связывает код с физическим миром** — ПИД — это место, где встречаются математика, софт и железо.\n- **Реальное железо заземляет теорию** — прикосновение к экосистеме Schneider сделало промышленное управление осязаемым, а не абстрактным.\n- **Честность о рамках** — это кейс широты и достоверности: понимание и практика, а не выпущенный артефакт.",
-        "en": "- **Manual tuning is intuition built on observation** — response curves teach more than the equation.\n- **Control connects code to the physical world** — a PID is where math, software, and hardware meet.\n- **Real hardware grounds theory** — touching the Schneider ecosystem made industrial control tangible rather than abstract.\n- **Honesty about scope** — this is a breadth/credibility case: understanding and practice, not a shipped artifact."
-      },
-      "related": {
-        "ru": "- Процессор из NAND — ещё один низкоуровневый кейс с системным мышлением\n- О Лили — привычка к самообразованию за всем этим\n- Модель кейс-стади — модель, которой следует этот кейс",
-        "en": "- cpu-from-nand — another low-level, systems-thinking case\n- about-lily — the self-study habit behind it\n- case-study-model — the model this case follows"
       },
       "updated": "2026-08-16"
     },

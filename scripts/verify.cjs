@@ -45,7 +45,7 @@ const NAV = ['index.html', 'projects.html', 'laboratory.html', 'about.html', 'co
     page.on('requestfailed', (r) => errors.push(`requestfailed: ${r.url()} ${r.failure()?.errorText || ''}`));
 
     await page.goto(url(rel), { waitUntil: 'load' });
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(3200);
 
     const facts = await page.evaluate(() => ({
       lang: document.documentElement.lang,
@@ -59,6 +59,33 @@ const NAV = ['index.html', 'projects.html', 'laboratory.html', 'about.html', 'co
       emptyState: document.querySelector('.empty-state')?.textContent?.trim() || null,
       notice: [...document.querySelectorAll('.notice')].filter((el) => !el.hidden).map((el) => el.textContent.trim().slice(0, 50)).join(' | ') || null,
       caseText: (document.querySelector('.case-section .prose, .case-section p')?.textContent || '').slice(0, 80),
+      heroCoverage: (() => {
+        const hero = document.querySelector('.hero');
+        if (!hero) return null;
+        return Math.round((hero.getBoundingClientRect().height / window.innerHeight) * 100);
+      })(),
+      btnLabels: [...document.querySelectorAll('a.btn')].filter((a) => {
+        const sp = a.querySelector(':scope > span');
+        if (!sp || !sp.textContent.trim()) return false;
+        const r = sp.getBoundingClientRect();
+        return r.height > 0 && r.width > 0 && getComputedStyle(sp).position === 'relative';
+      }).length,
+      btnTotal: document.querySelectorAll('a.btn').length,
+      ringLayers: [...document.querySelectorAll('.ring')].every((el) => {
+        const cs = getComputedStyle(el, '::before');
+        return cs.backgroundImage !== 'none' || cs.backgroundColor !== 'rgba(0, 0, 0, 0)';
+      }),
+      primaryFill: (() => {
+        // the primary CTA must keep its gradient plate on every surface
+        const p = document.querySelector('.btn-primary');
+        if (!p) return 'none';
+        return getComputedStyle(p, '::after').backgroundImage.slice(0, 24);
+      })(),
+      ghostSurface: (() => {
+        const b = document.querySelector('.btn:not(.btn-primary)');
+        return b ? getComputedStyle(b, '::after').backgroundColor : null;
+      })(),
+      ambience: null,
       cyrillic: (() => {
         const txt = document.querySelector('#case-root')?.textContent || '';
         const letters = [...txt].filter((ch) => /\p{L}/u.test(ch));
@@ -66,6 +93,28 @@ const NAV = ['index.html', 'projects.html', 'laboratory.html', 'about.html', 'co
         return letters.length ? Math.round((cyr / letters.length) * 100) : 0;
       })(),
     }));
+
+    // prove the ambience reacts to the pointer instead of merely existing
+    facts.ambience = await page.evaluate(async () => {
+      const cv = document.getElementById('ambient');
+      if (!cv) return null;
+      const hash = () => {
+        const g = cv.getContext('2d');
+        if (!g) return 0;
+        const d = g.getImageData(0, 0, cv.width, cv.height).data;
+        let h = 0;
+        for (let i = 0; i < d.length; i += 997) h = (h * 31 + d[i]) % 1e9;
+        return h;
+      };
+      const before = hash();
+      const r = cv.getBoundingClientRect();
+      (cv.closest('.hero') || cv.parentElement).dispatchEvent(new PointerEvent('pointermove', {
+        clientX: r.left + r.width * 0.25, clientY: r.top + r.height * 0.35, bubbles: true,
+      }));
+      await new Promise((res) => setTimeout(res, 600));
+      const after = hash();
+      return { reactsToPointer: after !== before, lit: before > 0 };
+    });
 
     // language toggle: RU -> EN on a page that has a hero lede
     let langFlip = null;

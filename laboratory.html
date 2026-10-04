@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -46,20 +46,27 @@
       <p class="lede" data-ru="Здесь проекты, которые интересны, но не претендуют на полноценный кейс: прототипы, тесты инструментов, честный статус — включая то, что не получилось." data-en="Projects that are interesting but do not claim to be full cases: prototypes, tool experiments, honest status — including what did not work out.">Проекты, которые интересны, но не претендуют на полноценный кейс.</p>
 
       <div class="plain-list" style="margin-top:2rem">
-        <div class="holo clip" style="color:var(--ink)">
+        <div class="holo clip ring" style="color:var(--ink)">
           <p class="kicker" data-ru="опыт" data-en="experiment">опыт</p>
           <h3>Horizon Chamber</h3>
           <p class="lede" data-ru="Тест потолка агентной разработки: десктопное приложение целиком — бэкенд на FastAPI, time-aware небула на canvas, рассветный будильник со звуком, захват мыслей, цели и канбан, нативный Win32-трекинг активности, агрегация n8n через SSE, сборка в один .exe. Честный итог: продукт настоящий (11 наборов pytest, модульная архитектура, SemVer-чейнджлог), но код сырой — это был тест процесса, а не витринный проект." data-en="A probe of the agentic workflow&#39;s ceiling: a full desktop product — FastAPI backend, time-aware canvas nebula, audiovisual sunrise alarm, thought capture, goals and kanban, native Win32 activity tracking, n8n aggregation over SSE, shipped as a single .exe. Honest verdict: the product is real (11 pytest files, modular architecture, SemVer changelog) but the code is rough — it was a workflow test, not a showcase.">Тест потолка агентной разработки: полноценное десктопное приложение на FastAPI, canvas-небула, будильник, канбан, Win32-трекинг, сборка в .exe. Код сырой — это был тест процесса.</p>
           <div class="chips"><span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">n8n</span><span class="chip">Win32</span><span class="chip chip-neon" data-ru="статус: пауза" data-en="status: paused">статус: пауза</span></div>
         </div>
 
-        <div class="holo clip" style="color:var(--ink)">
+        <div class="holo clip ring" style="color:var(--ink)">
           <p class="kicker" data-ru="опыт" data-en="experiment">опыт</p>
           <h3 data-ru="Эксперименты с процессом разработки" data-en="Workflow experimentation">Эксперименты с процессом разработки</h3>
           <p class="lede" data-ru="Постоянная итерация самого рабочего процесса: агентные кодинг-инструменты, спецификация-первым, премортем-планирование. Эта нить связывает лабораторию и кейсы." data-en="Ongoing iteration on the development workflow itself: agentic coding tools, spec-first planning, pre-mortem plans. This thread ties the laboratory to the case studies.">Итерация самого процесса: агентные инструменты, спецификация-первым, премортем-планирование.</p>
           <div class="chips"><span class="chip">OpenCode</span><span class="chip">Kun</span><span class="chip">DeepSeek</span><span class="chip" data-ru="идёт" data-en="ongoing">идёт</span></div>
         </div>
       </div>
+
+        <div class="holo clip ring" style="color:var(--ink)">
+          <p class="kicker" data-ru="опыт" data-en="experiment">опыт</p>
+          <h3 data-ru="ПИД-регулятор и промышленная автоматика" data-en="PID control and industrial automation">ПИД-регулятор и промышленная автоматика</h3>
+          <p class="lede" data-ru="Самостоятельно разобралась с ПИД-регулированием: реализовала регулятор и вручную подобрала коэффициенты, плюс лабораторная работа на реле Schneider Zelio Logic. Код не сохранился — остались методика и рабочее понимание контура." data-en="Taught myself PID control: implemented the controller and tuned the coefficients by hand, plus lab work on Schneider Zelio Logic relays. No code survived — what remains is the method and a working understanding of the loop.">Самостоятельно разобралась с ПИД-регулированием: реализовала регулятор и вручную подобрала коэффициенты, плюс лабораторная работа на реле Schneider Zelio Logic. Код не сохранился — остались методика и рабочее понимание контура.</p>
+          <div class="chips"><span class="chip">PID</span><span class="chip">Schneider Zelio Logic</span><span class="chip" data-ru="код не сохранён" data-en="no preserved code">код не сохранён</span></div>
+        </div>
 
       <h3 style="margin-top:2.6rem" data-ru="Очередь опытов" data-en="In the queue">Очередь опытов</h3>
       <ul class="plain-list">
@@ -68,7 +75,7 @@
         <li><span class="chip">Coursework</span><span class="empty-state" data-ru="Expert-System, 2D-Optimization, Interpolation, LinearEquationsSystems" data-en="Expert-System, 2D-Optimization, Interpolation, LinearEquationsSystems">Expert-System и др.</span></li>
       </ul>
       <div class="hero-cta">
-        <a class="btn" href="projects.html" data-ru="к кейсам →" data-en="to the cases →">к кейсам →</a>
+        <a class="btn" href="projects.html" data-ru="к кейсам →" data-en="to the cases →"><span>к кейсам →</span></a>
       </div>
     </div>
   </section>
@@ -91,6 +98,7 @@
 </footer>
 
 <script src="data/cases.js"></script>
+<script src="js/ambient.js"></script>
 <script src="js/site.js"></script>
 </body>
 </html>

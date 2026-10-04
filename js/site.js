@@ -24,7 +24,11 @@
     document.documentElement.lang = lang;
     document.querySelectorAll('[data-ru]').forEach((el) => {
       const value = lang === 'en' ? el.dataset.en || el.dataset.ru : el.dataset.ru;
-      if (value != null) el.textContent = value;
+      if (value == null) return;
+      // buttons carry their label in an inner span (it has to paint above the
+      // ring layers), so write into that span rather than nuking it
+      const span = el.classList.contains('btn') ? el.querySelector(':scope > span') : null;
+      (span || el).textContent = value;
     });
     document.querySelectorAll('[data-ru-html]').forEach((el) => {
       el.innerHTML = lang === 'en' ? el.dataset.enHtml || el.dataset.ruHtml : el.dataset.ruHtml;
@@ -126,7 +130,7 @@
       ? `<span class="card-flag" data-ru="featured" data-en="featured">featured</span>`
       : `<span class="chip">${themeLabel(c.theme)}</span>`;
     return `
-      <a class="card clip reveal" href="case.html?project=${encodeURIComponent(c.id)}" style="transition-delay:${Math.min(index * 60, 360)}ms">
+      <a class="card clip ring reveal" href="case.html?project=${encodeURIComponent(c.id)}" style="transition-delay:${Math.min(index * 60, 360)}ms">
         <div class="card-top">
           <svg class="card-hex" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.6 21 7v10l-9 5.4L3 17V7z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12 6.4 16.8 9v5.2L12 16.9l-4.8-2.7V9z" fill="currentColor" opacity=".45"/></svg>
           ${flag}
@@ -188,7 +192,7 @@
         <p class="kicker">404</p>
         <h2>${state.lang === 'en' ? 'Case not found' : 'Кейс не найден'}</h2>
         <p class="lede">${state.lang === 'en' ? 'No case with the id' : 'Нет кейса с идентификатором'} <code>${escapeHtml(id || '')}</code>.</p>
-        <p><a class="btn" href="projects.html">${state.lang === 'en' ? 'All projects' : 'Все проекты'}</a></p>
+        <p><a class="btn" href="projects.html"><span>${state.lang === 'en' ? 'All projects' : 'Все проекты'}</span></a></p>
       </div></section>`;
       return;
     }
@@ -301,93 +305,6 @@
     targets.forEach((el) => observer.observe(el));
   }
 
-  /* -------------------------------------------------------------- ambience -- */
-
-  const VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
-  const FRAG = `
-    precision mediump float;
-    uniform vec2 R; uniform float T;
-    float hash(vec2 p){return fract(sin(dot(p,vec2(41.3,289.1)))*43758.5453);}
-    float glow(vec2 uv, vec2 c, float r){
-      float d = length(uv-c);
-      return r/(d*d*900.0 + r);
-    }
-    void main(){
-      vec2 uv = (gl_FragCoord.xy - 0.5*R)/min(R.x,R.y);
-      vec3 col = vec3(0.0);
-      vec2 c1 = vec2(sin(T*0.13)*0.55, cos(T*0.11)*0.30);
-      vec2 c2 = vec2(cos(T*0.09)*0.62, sin(T*0.17)*0.34);
-      vec2 c3 = vec2(sin(T*0.07+2.1)*0.40, cos(T*0.05+1.3)*0.45);
-      col += vec3(0.0,0.72,0.86) * glow(uv,c1,0.085);
-      col += vec3(0.42,0.24,0.95) * glow(uv,c2,0.075);
-      col += vec3(0.65,0.35,0.95) * glow(uv,c3,0.055);
-      float scan = sin((uv.y*R.y*0.5) + T*1.2)*0.006;
-      float grain = (hash(gl_FragCoord.xy + T) - 0.5)*0.05;
-      col += scan + grain;
-      gl_FragColor = vec4(col, 1.0);
-    }`;
-
-  function initAmbient() {
-    const canvas = document.getElementById('ambient');
-    if (!canvas) return;
-    if (wantsStatic || prefersReduced.matches) { canvas.remove(); return; }
-    const gl = canvas.getContext('webgl', { antialias: false, alpha: true, powerPreference: 'low-power' });
-    if (!gl) { canvas.remove(); return; }
-
-    const compile = (type, src) => {
-      const sh = gl.createShader(type);
-      gl.shaderSource(sh, src); gl.compileShader(sh);
-      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh));
-      return sh;
-    };
-
-    try {
-      const prog = gl.createProgram();
-      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
-      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
-      gl.linkProgram(prog);
-      gl.useProgram(prog);
-
-      const buf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-      const loc = gl.getAttribLocation(prog, 'p');
-      gl.enableVertexAttribArray(loc);
-      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-
-      const uR = gl.getUniformLocation(prog, 'R');
-      const uT = gl.getUniformLocation(prog, 'T');
-
-      const resize = () => {
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        canvas.width = Math.max(1, Math.floor(canvas.clientWidth * dpr));
-        canvas.height = Math.max(1, Math.floor(canvas.clientHeight * dpr));
-        gl.viewport(0, 0, canvas.width, canvas.height);
-      };
-      resize();
-      window.addEventListener('resize', resize, { passive: true });
-
-      let raf = 0;
-      const start = performance.now();
-      const frame = (now) => {
-        gl.uniform2f(uR, canvas.width, canvas.height);
-        gl.uniform1f(uT, (now - start) / 1000);
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-        raf = requestAnimationFrame(frame);
-      };
-      const stop = () => { cancelAnimationFrame(raf); raf = 0; };
-      const startLoop = () => { if (!raf) raf = requestAnimationFrame(frame); };
-
-      startLoop();
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) stop(); else startLoop();
-      });
-    } catch (err) {
-      canvas.remove();           // shader failure → keep the CSS gradient
-      console.warn('ambient disabled:', err.message);
-    }
-  }
-
   /* ------------------------------------------------------------------ boot -- */
 
   function initChrome() {
@@ -406,7 +323,6 @@
 
   async function boot() {
     initChrome();
-    initAmbient();
     try {
       state.manifest = await loadManifest();
       state.cases = state.manifest.cases || [];
