@@ -21,6 +21,7 @@ const url = (p) => (base.startsWith('file:') ? `${base}/${p}` : `${base}/${p}`);
 const pages = [
   ['index', 'index.html', 'ru'],
   ['projects', 'projects.html', 'ru'],
+  ['services', 'services.html', 'ru'],
   ['about', 'about.html', 'ru'],
   ['laboratory', 'laboratory.html', 'ru'],
   ['contact', 'contact.html', 'ru'],
@@ -29,7 +30,7 @@ const pages = [
   ['index-static', 'index.html?static', 'ru'],
 ];
 
-const NAV = ['index.html', 'projects.html', 'laboratory.html', 'about.html', 'contact.html'];
+const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 'about.html', 'contact.html'];
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
