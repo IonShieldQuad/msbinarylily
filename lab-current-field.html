@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ток по швам — MsBinaryLily</title>
+<meta name="description" content="Опыт лаборатории: шестиугольная плита с рельефом, дрейфующим светом и током, который ищет путь по графу швов — A*, расширение коридора, срезание тупиков, анимация одним растущим числом.">
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-ru="к содержимому" data-en="skip to content">к содержимому</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8 21 7v10l-9 5.2L3 17V7z" fill="none" stroke="#00e5ff" stroke-width="1.4"/><path d="M12 6.6 16.6 9.2v4.6L12 16.4l-4.6-2.6V9.2z" fill="#7c4dff"/></svg>
+      <span class="brand-name">Ms<b>Binary</b>Lily</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span data-ru="меню" data-en="menu">меню</span>
+    </button>
+    <nav class="nav" id="site-nav" aria-label="Main">
+      <a href="index.html" data-ru="главная" data-en="home">главная</a>
+      <a href="projects.html" data-ru="проекты" data-en="projects">проекты</a>
+      <a href="services.html" data-ru="услуги" data-en="services">услуги</a>
+      <a href="laboratory.html" data-ru="лаборатория" data-en="laboratory">лаборатория</a>
+      <a href="about.html" data-ru="обо мне" data-en="about">обо мне</a>
+      <a href="contact.html" data-ru="контакты" data-en="contact">контакты</a>
+      <span class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang-btn="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang-btn="en" aria-pressed="false">EN</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="section-panel">
+    <div class="wrap">
+      <p class="kicker">LABORATORY · EXPERIMENT</p>
+      <h2 data-ru="Рельефная плита и ток по швам" data-en="A relief plate with current in the seams">Рельефная плита и ток по швам</h2>
+      <p class="lede" data-ru="Опыт целиком: генерация рельефа, освещение, поиск пути и анимация. Шестиугольная плита из пирамид, ключевой свет, который медленно дрейфует, и ток, который ищет себе дорогу по швам между сотами — не по случайной линии, а по взвешенному графу. Это тот же движок, что работает на главной странице: здесь его параметры выведены наружу." data-en="The whole experiment: relief generation, lighting, pathfinding and animation. A hexagonal plate of pyramids, a key light that drifts slowly, and current that finds its way through the seams between cells — not along a random line but along a weighted graph. This is the same engine the home page runs; here its parameters are exposed.">Опыт целиком: генерация рельефа, освещение, поиск пути и анимация. Шестиугольная плита из пирамид, ключевой свет, который медленно дрейфует, и ток, который ищет себе дорогу по швам между сотами — не по случайной линии, а по взвешенному графу. Это тот же движок, что работает на главной странице: здесь его параметры выведены наружу.</p>
+
+      <div class="lab-stage">
+        <canvas id="ambient" aria-hidden="true"></canvas>
+        <span class="lab-badge" data-ru="canvas 2d · без библиотек · 30 fps" data-en="canvas 2d · no libraries · 30 fps">canvas 2d · без библиотек · 30 fps</span>
+      </div>
+
+      <div class="lab-controls">
+        <button type="button" data-v="route" aria-pressed="true" data-ru="маршрут" data-en="route">маршрут</button>
+        <button type="button" data-v="wide" aria-pressed="false" data-ru="маршрут · толще" data-en="route · thicker">маршрут · толще</button>
+        <button type="button" data-v="busy" aria-pressed="false" data-ru="маршрут · чаще" data-en="route · busier">маршрут · чаще</button>
+        <button type="button" data-act="fire" data-ru="впрыснуть ток" data-en="inject current">впрыснуть ток</button>
+      </div>
+      <p class="empty-state" style="margin-top:.9rem" data-ru="клик по плите тоже впрыскивает ток; курсор подсвечивает швы вокруг себя" data-en="clicking the plate also injects current; the cursor lights the seams around it">клик по плите тоже впрыскивает ток; курсор подсвечивает швы вокруг себя</p>
+
+      <div class="lab-spec">
+
+        <div class="holo clip ring" style="color:var(--ink)">
+          <p class="kicker" data-ru="сцена" data-en="the canvas">сцена</p>
+          <h3 data-ru="Плита и её пирамиды" data-en="The plate and its pyramids">Плита и её пирамиды</h3>
+          <div class="prose">
+            <p data-ru="Ячейка — не плоский шестиугольник, а шестигранная пирамида: шесть треугольных граней от приподнятой (или утопленной) вершины к кромке. Решётка строится целиком при загрузке и при изменении размера окна: сначала пишется тёмный «мортирный» слой с фаской и контактной тенью, потом лица граней, потом виньетка. В кадре от плиты остаётся два готовых слоя и одна операция drawImage." data-en="A cell is not a flat hexagon but a six-sided pyramid: six triangular facets running from a raised (or sunken) apex to the rim. The lattice is built once on load and on resize: first a dark mortar layer with bevels and contact shadow, then the facet faces, then a vignette. Per frame the plate costs two pre-rendered layers and one drawImage.">Ячейка — не плоский шестиугольник, а шестигранная пирамида: шесть треугольных граней от приподнятой (или утопленной) вершины к кромке. Решётка строится целиком при загрузке и при изменении размера окна: сначала тёмный «мортирный» слой с фаской и контактной тенью, потом лица граней, потом виньетка. В кадре от плиты остаётся два готовых слоя и одна операция drawImage.</p>
+            <p><code data-ru="~940 ячеек · 30 fps · 2 слоя в кадре" data-en="~940 cells · 30 fps · 2 layers per frame">~940 ячеек · 30 fps · 2 слоя в кадре</code></p>
+          </div>
+        </div>
+
+        <div class="holo clip ring" style="color:var(--ink)">
+          <p class="kicker" data-ru="рельеф" data-en="relief">рельеф</p>
+          <h3 data-ru="Пять горячих точек" data-en="Five hotspots">Пять горячих точек</h3>
+          <div class="prose">
+            <p data-ru="Высота не шум по всей площади, а несколько «горячих точек» со случайным знаком: вклад каждой затухает с расстоянием квадратично, а за радиусом точки равен нулю. Поэтому плита спокойная между ними и живая в них. Вершина пирамиды смещается вниз по градиенту поля, так что наклон читается как склон холма, а не как конус." data-en="Height is not noise spread over the plate but a handful of hotspots with a random sign: each contribution decays quadratically with distance and is exactly zero beyond its radius, so the plate is calm between them and alive on them. The apex leans down the field gradient, which is what makes a slope read as a hillside rather than a cone.">Высота не шум по всей площади, а несколько «горячих точек» со случайным знаком: вклад каждой затухает с расстоянием квадратично, а за радиусом точки равен нулю. Поэтому плита спокойная между ними и живая в них. Вершина пирамиды смещается вниз по градиенту поля, так что наклон читается как склон холма, а не как конус.</p>
+            <p><code data-ru="h = Σ знак · усиление · (1 − d/r)²" data-en="h = Σ sign · gain · (1 − d/r)²">h = Σ знак · усиление · (1 − d/r)²</code></p>
+          </div>
+        </div>
+
+        <div class="holo clip ring" style="color:var(--ink)">
+          <p class="kicker" data-ru="свет" data-en="lighting">свет</p>
+          <h3 data-ru="Свет медленно дрейфует" data-en="The light drifts">Свет медленно дрейфует</h3>
+          <div class="prose">
+            <p data-ru="Освещение не нарисовано градиентом: у каждой грани есть своя нормаль (векторное произведение двух рёбер), а яркость — это N·L от одного ключевого света. Свет не зафиксирован: азимут ходит на ±24° с периодом около 40 секунд, высота — около 55, так что плита потихоньку переосвещается. Нормали при этом статичны (они зависят только от геометрии), поэтому пересвет плиты стоит шесть скалярных произведений на ячейку — каждый кадр пересвечивается десятая часть, без рывков и без пересборки." data-en="Lighting is not a painted gradient: every facet has its own normal (the cross product of two of its edges) and brightness is N·L against a single key light. The light is not fixed: azimuth swings ±24° on a ~40-second cycle and elevation on a ~55-second one, so the plate slowly re-lights. The normals are static (they depend on geometry alone), so re-lighting costs six dot products per cell — a tenth of the plate is re-shaded each frame, with no hitch and no rebuild.">Освещение не нарисовано градиентом: у каждой грани есть своя нормаль (векторное произведение двух рёбер), а яркость — это N·L от одного ключевого света. Свет не зафиксирован: азимут ходит на ±24° с периодом около 40 секунд, высота — около 55, так что плита потихоньку переосвещается. Нормали при этом статичны (они зависят только от геометрии), поэтому пересвет плиты стоит шесть скалярных произведений на ячейку — каждый кадр пересвечивается десятая часть, без рывков и без пересборки.</p>
+            <p><code data-ru="яркость = N · L, свет дрейфует ±24°" data-en="brightness = N · L, light drifts ±24°">яркость = N · L, свет дрейфует ±24°</code></p>
+          </div>
+        </div>
+
+        <div class="holo clip ring" style="color:var(--ink)">
+          <p class="kicker" data-ru="поиск пути" data-en="pathfinding">поиск пути</p>
+          <h3 data-ru="Швы — это граф" data-en="The seams are a graph">Швы — это граф</h3>
+          <div class="prose">
+            <p data-ru="Швы между сотами — уже готовая сетка: узлы это углы решётки (в каждом сходятся три ячейки), рёбра — сами швы. Стоимость узла = 1 + вклад рельефа + шум, и знак вклада рельефа — это ручка поведения: при положительном маршрут обходит высокие пирамиды, при отрицательном его тянет к ним. Дальше A* ищет самый дешёвый путь между двумя терминалами на краю кадра, Dijkstra с бюджетом расширяет его в коридор нужной толщины, а узлы с единственным соседом срезаются до неподвижной точки." data-en="The seams are already a lattice: nodes are the lattice corners (three cells meet at each one), edges are the seams themselves. A node's cost = 1 + relief term + noise, and the sign of the relief term is a behaviour switch: positive makes the route avoid the tall pyramids, negative pulls it to them. A* then finds the cheapest path between two terminals on the frame edge, budgeted Dijkstra expands it into a corridor of the wanted thickness, and nodes with a single neighbour are peeled to a fixpoint.">Швы между сотами — уже готовая сетка: узлы это углы решётки (в каждом сходятся три ячейки), рёбра — сами швы. Стоимость узла = 1 + вклад рельефа + шум, и знак вклада рельефа — это ручка поведения: при положительном маршрут обходит высокие пирамиды, при отрицательном его тянет к ним. Дальше A* ищет самый дешёвый путь между двумя терминалами на краю кадра, Dijkstra с бюджетом расширяет его в коридор нужной толщины, а узлы с единственным соседом срезаются до неподвижной точки.</p>
+            <p data-ru="Срезание — то же правило «нет тупиков»: срез идёт от кончика ветки и останавливается на первой развилке, поэтому ветка исчезает целиком, а коридор не рвётся. Тупик остаётся только там, где он и должен быть — на источнике и стоке." data-en="The peel is the no-dead-ends rule: it eats a twig from its tip and stops at the first junction, so the twig goes entirely while the corridor stays whole. A stub survives only where it belongs — at the source and the sink.">Срезание — то же правило «нет тупиков»: срез идёт от кончика ветки и останавливается на первой развилке, поэтому ветка исчезает целиком, а коридор не рвётся. Тупик остаётся только там, где он и должен быть — на источнике и стоке.</p>
+            <p><code data-ru="~2000 узлов · ~3000 рёбер · бюджет коридора 64" data-en="~2000 nodes · ~3000 edges · corridor budget 64">~2000 узлов · ~3000 рёбер · бюджет коридора 64</code></p>
+          </div>
+        </div>
+
+        <div class="holo clip ring" style="color:var(--ink)">
+          <p class="kicker" data-ru="анимация" data-en="animation">анимация</p>
+          <h3 data-ru="Одно растущее число" data-en="One rising number">Одно растущее число</h3>
+          <div class="prose">
+            <p data-ru="От источника по коридору считается стоимость до каждого узла — и на этом геометрия заканчивается. Фронт растёт со временем, и каждый узел попадает в одну из трёх ситуаций: впереди фронта — не горит, чуть позади — светится, далеко позади — погас. Волна получается сама собой, потому что узлы с равной стоимостью лежат поперёк коридора. Ничего не считается заново в кадре: маршрут и поле стоимостей посчитаны один раз, при рождении потока." data-en="A cost-from-source is computed over the corridor — and that is where the geometry ends. The front rises with time and every node falls into one of three cases: ahead of the front it is unlit, just behind it glows, far behind it has faded. The wavefront comes out for free, because nodes of equal cost lie across the corridor. Nothing is recomputed per frame: the route and the cost field are solved once, when the run is born.">От источника по коридору считается стоимость до каждого узла — и на этом геометрия заканчивается. Фронт растёт со временем, и каждый узел попадает в одну из трёх ситуаций: впереди фронта — не горит, чуть позади — светится, далеко позади — погас. Волна получается сама собой, потому что узлы с равной стоимостью лежат поперёк коридора. Ничего не считается заново в кадре: маршрут и поле стоимостей посчитаны один раз, при рождении потока.</p>
+            <p><code data-ru="x = фронт − стоимость; x&lt;0 нет · 0…hold свет · дальше затухание" data-en="x = front − cost; x&lt;0 off · 0…hold lit · then fading">x = фронт − стоимость; x&lt;0 нет · 0…hold свет · дальше затухание</code></p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="hero-cta">
+        <a class="btn" href="laboratory.html" data-ru="← к лаборатории" data-en="← to the laboratory"><span>← к лаборатории</span></a>
+        <a class="btn" href="index.html" data-ru="посмотреть на главной" data-en="see it on the home page"><span>посмотреть на главной</span></a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <p class="brand-name" style="margin:0 0 .5rem">Ms<b>Binary</b>Lily</p>
+      <p class="footer-meta" data-ru="Лилия Гринина · Тамбов, Россия · UTC+3" data-en="Lilia Grinina · Tambov, Russia · UTC+3">Лилия Гринина · Тамбов, Россия · UTC+3</p>
+      <div class="footer-links" style="margin-top:.9rem">
+        <a href="https://t.me/MsBinaryLily" rel="noopener">Telegram</a>
+        <a href="https://github.com/IonShieldQuad" rel="noopener">GitHub</a>
+        <a href="contact.html" data-ru="контакты" data-en="contact">контакты</a>
+      </div>
+    </div>
+    <p class="footer-meta" data-ru="Ванильный статический сайт: HTML, CSS, WebGL. Без фреймворков — по ADR-001." data-en="A vanilla static site: HTML, CSS, WebGL. No frameworks — per ADR-001.">Ванильный статический сайт: HTML, CSS, WebGL. Без фреймворков — по ADR-001.</p>
+  </div>
+</footer>
+
+<script src="data/cases.js"></script>
+<script src="js/ambient.js"></script>
+<script src="js/lab-current-field.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>

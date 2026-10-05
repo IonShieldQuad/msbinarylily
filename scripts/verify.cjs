@@ -24,6 +24,7 @@ const pages = [
   ['services', 'services.html', 'ru'],
   ['about', 'about.html', 'ru'],
   ['laboratory', 'laboratory.html', 'ru'],
+  ['lab-current-field', 'lab-current-field.html', 'ru'],
   ['contact', 'contact.html', 'ru'],
   ['case-tg', 'case.html?project=tg-aggregator', 'ru'],
   ['case-missing', 'case.html?project=does-not-exist', 'ru'],
