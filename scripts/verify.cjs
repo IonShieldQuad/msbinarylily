@@ -107,6 +107,11 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       })(),
       docTitle: document.title,
       h1Count: document.querySelectorAll('h1').length,
+      // markdown markers must never reach a surface that renders plain text
+      literalMd: (document.body.innerText.match(/\*\*[^*\n]{0,40}\*\*/g) || []).slice(0, 4),
+      // internal process vocabulary has no place in client-facing copy ("Arctic Code
+      // Vault Contributor" is a real GitHub badge, so that one phrase is allowed)
+      vocabulary: (document.body.innerText.match(/\bADR\b|(?<!Arctic Code )\bvault\b|премортем|pre-mortem|vanilla static site|SemVer/gi) || []).slice(0, 4),
       // the type floor (>=12px) is a standing UI constraint, so it is a test
       smallText: (() => {
         const out = [];
@@ -323,6 +328,8 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     const f = r.facts;
     if (r.errors.length) failures.push(`${r.name}: ${r.errors.length} error(s) — ${r.errors[0]}`);
     if (f.h1Count !== 1) failures.push(`${r.name}: ${f.h1Count} <h1> (exactly one expected)`);
+    if (f.literalMd.length) failures.push(`${r.name}: markdown markers in plain text — ${j(f.literalMd)}`);
+    if (f.vocabulary.length) failures.push(`${r.name}: internal vocabulary in visible copy — ${j(f.vocabulary)}`);
     if (f.smallText.length) failures.push(`${r.name}: type below 12px — ${j(f.smallText)}`);
     if (f.overflow360.overflow) failures.push(`${r.name}: sideways at 360px (${f.overflow360.scrollWidth} > ${f.overflow360.clientWidth}) — ${j(f.overflow360.offenders)}`);
     if (f.contrast.length) failures.push(`${r.name}: contrast below the floor — ${j(f.contrast.slice(0, 3))}`);

@@ -64,6 +64,18 @@
     ));
   }
 
+  /* the overview doubles as a teaser (cards, case lede, og:description) and those
+     surfaces render plain text, so the markdown markers are stripped rather than
+     converted — a teaser full of literal asterisks is what that looks like */
+  function plainMd(src) {
+    return String(src || '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/(?<![\w"'])\*([^*\n]+)\*(?![\w"'])/g, '$1')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   function inline(text) {
     return escapeHtml(text)
       .replace(/`([^`]+)`/g, '<code>$1</code>')
@@ -167,7 +179,7 @@
           ${flag}
         </div>
         <h3>${escapeHtml(title)}</h3>
-        <p>${escapeHtml(overview.split(/\n/)[0]).slice(0, 210)}</p>
+        <p>${escapeHtml(plainMd(overview.split(/\n/)[0])).slice(0, 210)}</p>
         <div class="chips">${chips}</div>
       </a>`;
   }
@@ -247,7 +259,7 @@
       return;
     }
     setMeta(`${t(c.title)} — MsBinaryLily`,
-      String(t(c.overview) || '').split(/\n/)[0].slice(0, 180), caseUrl(c.id));
+      plainMd(String(t(c.overview) || '').split(/\n/)[0]).slice(0, 180), caseUrl(c.id));
 
     const order = state.cases;
     const i = order.indexOf(c);
@@ -276,7 +288,7 @@
         <div class="wrap">
           <p class="kicker">${themeLabel(c.theme)} · ${state.lang === 'en' ? 'case' : 'кейс'}</p>
           <h1>${escapeHtml(t(c.title))}</h1>
-          <p class="lede">${escapeHtml(t(c.overview).split(/\n/)[0])}</p>
+          <p class="lede">${escapeHtml(plainMd(t(c.overview).split(/\n/)[0]))}</p>
           <div class="chips">${(c.stack || []).map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('')}</div>
         </div>
       </section>
