@@ -105,6 +105,119 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         const cyr = letters.filter((ch) => /[а-яёА-ЯЁ]/i.test(ch)).length;
         return letters.length ? Math.round((cyr / letters.length) * 100) : 0;
       })(),
+      docTitle: document.title,
+      h1Count: document.querySelectorAll('h1').length,
+      // the type floor (>=12px) is a standing UI constraint, so it is a test
+      smallText: (() => {
+        const out = [];
+        for (const el of document.querySelectorAll('body *')) {
+          const cs = getComputedStyle(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+          const b = el.getBoundingClientRect();
+          if (b.width < 2 || b.height < 2) continue;
+          if (!el.textContent.trim()) continue;
+          const fs = parseFloat(cs.fontSize);
+          if (fs < 12) out.push(`${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]}=${fs}px`);
+        }
+        return [...new Set(out)].slice(0, 6);
+      })(),
+      /* Every surface pair that broke contrast once: the label must BE the token for
+         that surface and must clear 4.5:1 on it. Pairs whose surface is painted by a
+         gradient are checked against the ring colour, which is the layer underneath. */
+      contrastPairs: (() => {
+        const lum = (rgb) => {
+          const s = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+          return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+        };
+        const toRgb = (css) => {
+          const probe = document.createElement('span');
+          probe.style.cssText = `color:${css};position:absolute;top:-9999px;left:-9999px`;
+          document.body.appendChild(probe);
+          const c = getComputedStyle(probe).color;
+          probe.remove();
+          const m = c.match(/rgba?\(([^)]+)\)/);
+          return m ? m[1].split(',').map(Number).slice(0, 3) : null;
+        };
+        const ratio = (a, b) => Math.round(((Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05)) * 100) / 100;
+        const pairs = [
+          ['.case-head .lede', 'var(--text-on-dark-dim)', 'var(--carbon)'],
+          ['.case-head .chip', 'var(--text-on-dark-dim)', 'var(--carbon)'],
+          ['.case-head .kicker', 'var(--neon-cyan)', 'var(--carbon)'],
+          ['.section-carbon .kicker', 'var(--neon-cyan)', 'var(--carbon)'],
+          ['.holo.ring .footer-meta', 'var(--text-on-dark-dim)', 'var(--line-dark)'],
+          ['.holo.ring .chip:not(.chip-neon)', 'var(--text-on-dark-dim)', 'var(--line-dark)'],
+          ['.lab-controls button:not([aria-pressed="true"]):not([data-act])', 'var(--ink-dim)', 'var(--panel)'],
+          ['.card-flag', 'var(--neon-ink)', 'var(--line)'],
+          ['.chip-neon[data-filter]', 'var(--neon-ink)', 'var(--panel)'],
+          ['.holo.ring .chip-neon', 'var(--neon-cyan)', 'var(--line-dark)'],
+          ['.section-carbon .chip-neon', 'var(--neon-cyan)', 'var(--carbon)'],
+          ['.lab-badge', 'var(--text-on-dark-dim)', 'var(--carbon)'],
+        ];
+        const out = [];
+        for (const [sel, fgExpr, bgExpr] of pairs) {
+          const el = document.querySelector(sel);
+          if (!el) continue;
+          const fg = toRgb(getComputedStyle(el).color);
+          if (!fg) continue;
+          out.push({
+            sel,
+            ratio: ratio(fg, toRgb(bgExpr)),
+            tokenOk: fg.join() === toRgb(fgExpr).join(),
+          });
+        }
+        return out;
+      })(),
+      // broad net: visible text on a solid surface below the AA floor (elements
+      // painted over a gradient are skipped — the colour walk cannot know them)
+      contrast: (() => {
+        const lum = (rgb) => {
+          const s = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+          return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+        };
+        const parse = (s) => {
+          const m = String(s).match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          const p = m[1].split(',').map(Number);
+          return { rgb: p.slice(0, 3), a: p.length > 3 ? p[3] : 1 };
+        };
+        const surface = (el) => {
+          let n = el;
+          while (n && n !== document.documentElement) {
+            for (const pe of ['::after', '::before', null]) {
+              const cs = getComputedStyle(n, pe);
+              if (cs.backgroundImage && cs.backgroundImage !== 'none') return null;
+              const c = parse(cs.backgroundColor);
+              if (c && c.a > 0.85) return c.rgb;
+            }
+            n = n.parentElement;
+          }
+          return [11, 12, 16];
+        };
+        const out = [];
+        const seen = new Set();
+        for (const el of document.querySelectorAll('body *')) {
+          const cs = getComputedStyle(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+          const b = el.getBoundingClientRect();
+          if (b.width < 4 || b.height < 4) continue;
+          if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim().length > 1)) continue;
+          const fg = parse(cs.color);
+          if (!fg || fg.a < 0.5) continue;
+          const bg = surface(el);
+          if (!bg) continue;
+          const l1 = lum(fg.rgb), l2 = lum(bg);
+          const ratio = Math.round(((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)) * 100) / 100;
+          const px = parseFloat(cs.fontSize);
+          const bold = parseInt(cs.fontWeight, 10) >= 700;
+          const min = (px >= 24 || (px >= 18.66 && bold)) ? 3 : 4.5;
+          const key = el.className + '|' + cs.color;
+          if (ratio < min && !seen.has(key)) {
+            seen.add(key);
+            out.push({ sel: el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''), text: el.textContent.trim().slice(0, 24), ratio, min });
+          }
+        }
+        return out.slice(0, 6);
+      })(),
     }));
 
     // prove the ambience reacts to the pointer instead of merely existing
@@ -142,6 +255,23 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         pressed: document.querySelector('[data-lang-btn="en"]')?.getAttribute('aria-pressed'),
       }));
       langFlip = { before, after: after.first, lang: after.lang, pressed: after.pressed, changed: before !== after.first };
+      // nothing may stay in the source language once EN is on (a place name or the
+      // language labels themselves are not translation leftovers)
+      langFlip.leftoverCyrillic = await page.evaluate(() => {
+        const allow = [/^Тамбов/];
+        const out = [];
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        let n;
+        while ((n = walker.nextNode())) {
+          const t = n.textContent.trim();
+          if (!t || !/[а-яёА-ЯЁ]/.test(t)) continue;
+          const el = n.parentElement;
+          if (!el || !el.offsetParent || el.closest('script,style')) continue;
+          if (allow.some((re) => re.test(t))) continue;
+          out.push(t.slice(0, 40));
+        }
+        return [...new Set(out)].slice(0, 6);
+      });
       await page.click('[data-lang-btn="ru"]');
       await page.waitForTimeout(250);
     }
@@ -155,6 +285,27 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       await page.screenshot({ path: path.join(OUT, `${name}-mobile.png`), fullPage: false });
     }
 
+    // 360px is the width the layout promises to hold: nothing may push it sideways
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.waitForTimeout(350);
+    facts.overflow360 = await page.evaluate(() => {
+      const de = document.documentElement;
+      const off = [];
+      for (const el of document.querySelectorAll('body *')) {
+        if (el.closest('.ticker') || el.classList.contains('skip-link')) continue;
+        const cs = getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+        const b = el.getBoundingClientRect();
+        if (b.width < 2 || b.height < 2) continue;
+        if (b.right > de.clientWidth + 1) off.push(el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+      }
+      return {
+        clientWidth: de.clientWidth, scrollWidth: de.scrollWidth,
+        overflow: de.scrollWidth > de.clientWidth + 1,
+        offenders: [...new Set(off)].slice(0, 5),
+      };
+    });
+
     report.push({ name, rel, errors, facts, langFlip, shot });
     await context.close();
   }
@@ -164,6 +315,40 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     .map((r) => JSON.stringify(r.facts.navLinks));
   const navConsistent = navSets.every((s) => s === navSets[0]) && JSON.parse(navSets[0] || '[]').join() === NAV.join();
 
+  /* ------------------------------------------------------------------ asserts --
+     Every defect found in QA keeps a check here, so it cannot come back silently. */
+  const failures = [];
+  const j = (v) => JSON.stringify(v);
+  for (const r of report) {
+    const f = r.facts;
+    if (r.errors.length) failures.push(`${r.name}: ${r.errors.length} error(s) — ${r.errors[0]}`);
+    if (f.h1Count !== 1) failures.push(`${r.name}: ${f.h1Count} <h1> (exactly one expected)`);
+    if (f.smallText.length) failures.push(`${r.name}: type below 12px — ${j(f.smallText)}`);
+    if (f.overflow360.overflow) failures.push(`${r.name}: sideways at 360px (${f.overflow360.scrollWidth} > ${f.overflow360.clientWidth}) — ${j(f.overflow360.offenders)}`);
+    if (f.contrast.length) failures.push(`${r.name}: contrast below the floor — ${j(f.contrast.slice(0, 3))}`);
+    for (const p of f.contrastPairs) {
+      if (!p.tokenOk) failures.push(`${r.name}: ${p.sel} does not use the token of its surface`);
+      if (p.ratio < 4.5) failures.push(`${r.name}: ${p.sel} contrast ${p.ratio} < 4.5`);
+    }
+    if (f.ambient) {
+      if (r.rel.includes('?static')) {
+        if (f.ambience !== null) failures.push(`${r.name}: ?static must remove the canvas`);
+      } else if (!f.ambience || !f.ambience.reactsToPointer || !f.ambience.lit) {
+        failures.push(`${r.name}: ambience probe ${j(f.ambience)}`);
+      }
+    }
+    if (r.langFlip) {
+      if (!r.langFlip.changed) failures.push(`${r.name}: RU→EN toggle changed nothing`);
+      if (r.langFlip.pressed !== 'true') failures.push(`${r.name}: EN button aria-pressed=${r.langFlip.pressed}`);
+      if (r.langFlip.leftoverCyrillic.length) failures.push(`${r.name}: Cyrillic left in EN mode — ${j(r.langFlip.leftoverCyrillic)}`);
+    }
+    if (r.name.startsWith('case-') && r.name !== 'case-missing' && f.h1 && !f.docTitle.includes(f.h1)) {
+      failures.push(`${r.name}: document.title ${j(f.docTitle)} does not carry the case title`);
+    }
+  }
+  if (!navConsistent) failures.push('nav is not identical on every page');
+
   await browser.close();
-  console.log(JSON.stringify({ base, navConsistent, report }, null, 2));
+  console.log(JSON.stringify({ base, navConsistent, assertsOk: failures.length === 0, failures, report }, null, 2));
+  if (failures.length) process.exitCode = 1;
 })().catch((err) => { console.error('HARNESS FAILURE:', err); process.exit(1); });
