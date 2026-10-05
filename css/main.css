@@ -322,8 +322,20 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 .hero::after {
   content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(100deg,
-    rgba(11, 12, 16, 0.90) 0%, rgba(11, 12, 16, 0.54) 46%, rgba(11, 12, 16, 0) 76%);
+    rgba(11, 12, 16, 0.95) 0%, rgba(11, 12, 16, 0.88) 30%, rgba(11, 12, 16, 0.72) 46%,
+    rgba(11, 12, 16, 0.34) 64%, rgba(11, 12, 16, 0.08) 80%, rgba(11, 12, 16, 0) 90%);
 }
+/* a scrim cannot guarantee contrast over a moving, faceted plate (measured: the
+   plate still peaks near p99 90 under the copy), so the glyphs carry their own
+   dark halo — the text-over-video answer, and it keeps the plate visible. */
+.hero h1, .hero .kicker, .hero .lede, .hero-stats b, .hero-stats span, .hero-cta .btn span {
+  text-shadow: 0 1px 2px rgba(11, 12, 16, 0.95), 0 0 6px rgba(11, 12, 16, 0.92),
+               0 0 14px rgba(11, 12, 16, 0.85), 0 0 26px rgba(11, 12, 16, 0.6);
+}
+/* the gradient-clipped wordmark must not carry the halo: its glyphs are
+   transparent, so a text-shadow paints a dark copy OF the word behind it and the
+   headline reads doubled */
+.hero h1 .binary-text { text-shadow: none; }
 @media (max-width: 899px) {
   .hero::after {
     background: linear-gradient(180deg, rgba(11, 12, 16, 0.62) 0%, rgba(11, 12, 16, 0.82) 100%);
@@ -373,7 +385,32 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
   font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.06em;
   color: var(--text-on-dark-dim);
 }
-.hero-emblem { width: min(390px, 76vw); justify-self: center; filter: drop-shadow(0 0 34px rgba(0, 229, 255, 0.28)); }
+/* The hero mark is a painted cut-out that sits on the animated plate rather than
+   replacing it: the halo keeps a dark pocket under the artwork so the mark stays
+   readable while the seam currents keep running behind it. */
+.hero-visual {
+  position: relative; justify-self: center;
+  display: grid; place-items: center;
+  width: min(430px, 78vw);
+}
+.hero-visual-halo {
+  position: absolute; inset: -20% -12%;
+  background: radial-gradient(58% 54% at 50% 50%,
+    rgba(11, 12, 16, 0.9) 0%, rgba(11, 12, 16, 0.84) 48%, rgba(11, 12, 16, 0.5) 72%,
+    rgba(11, 12, 16, 0.16) 88%, rgba(11, 12, 16, 0) 100%);
+  pointer-events: none;
+}
+/* The mark stays readable by EMITTING light, not by hiding the plate: the drop
+   shadows are the cyan/red poles the artwork itself uses, so it reads on top of
+   whatever the seam currents are doing behind it. */
+.hero-logo {
+  position: relative; width: 100%; height: auto; opacity: 0.99;
+  filter: brightness(1.07) contrast(1.05) saturate(1.06)
+          drop-shadow(0 0 14px rgba(0, 229, 255, 0.38)) drop-shadow(0 0 34px rgba(255, 61, 94, 0.20));
+}
+@media (min-width: 900px) {
+  .hero-visual { justify-self: end; width: min(520px, 41vw); }
+}
 
 /* ----------------------------------------------------------------- ticker -- */
 .ticker {

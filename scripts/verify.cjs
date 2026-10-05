@@ -107,6 +107,20 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       })(),
       docTitle: document.title,
       h1Count: document.querySelectorAll('h1').length,
+      // the hero visual + copy treatment: the mark must actually load, its pocket
+      // must exist, the copy must carry its dark halo and the gradient wordmark
+      // must not (a shadow behind transparent glyphs doubles the headline)
+      hero: (() => {
+        const g = (sel, prop) => { const el = document.querySelector(sel); return el ? getComputedStyle(el)[prop] : null; };
+        const logo = document.querySelector('.hero-logo');
+        return {
+          present: !!document.querySelector('.hero-visual'),
+          halo: !!document.querySelector('.hero-visual-halo'),
+          logoLoaded: logo ? logo.naturalWidth > 0 : null,
+          copyShadow: g('.hero .lede', 'textShadow'),
+          gradientShadow: g('.hero h1 .binary-text', 'textShadow'),
+        };
+      })(),
       // markdown markers must never reach a surface that renders plain text
       literalMd: (document.body.innerText.match(/\*\*[^*\n]{0,40}\*\*/g) || []).slice(0, 4),
       // internal process vocabulary has no place in client-facing copy ("Arctic Code
@@ -330,6 +344,12 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (f.h1Count !== 1) failures.push(`${r.name}: ${f.h1Count} <h1> (exactly one expected)`);
     if (f.literalMd.length) failures.push(`${r.name}: markdown markers in plain text — ${j(f.literalMd)}`);
     if (f.vocabulary.length) failures.push(`${r.name}: internal vocabulary in visible copy — ${j(f.vocabulary)}`);
+    if (f.hero && f.hero.present) {
+      if (!f.hero.halo) failures.push(`${r.name}: hero mark has no dark pocket (.hero-visual-halo)`);
+      if (f.hero.logoLoaded !== true) failures.push(`${r.name}: hero mark did not load (naturalWidth ${f.hero.logoLoaded})`);
+      if (!f.hero.copyShadow || f.hero.copyShadow === 'none') failures.push(`${r.name}: hero copy lost its dark halo`);
+      if (f.hero.gradientShadow !== 'none') failures.push(`${r.name}: the gradient wordmark carries a text-shadow (doubles the headline)`);
+    }
     if (f.smallText.length) failures.push(`${r.name}: type below 12px — ${j(f.smallText)}`);
     if (f.overflow360.overflow) failures.push(`${r.name}: sideways at 360px (${f.overflow360.scrollWidth} > ${f.overflow360.clientWidth}) — ${j(f.overflow360.offenders)}`);
     if (f.contrast.length) failures.push(`${r.name}: contrast below the floor — ${j(f.contrast.slice(0, 3))}`);
