@@ -22,6 +22,9 @@
   function applyLang(lang) {
     state.lang = lang;
     document.documentElement.lang = lang;
+    // render first, translate second: every renderer emits [data-ru]/[data-en]
+    // nodes, and translating before them left that content in the source language
+    renderDynamic();
     document.querySelectorAll('[data-ru]').forEach((el) => {
       const value = lang === 'en' ? el.dataset.en || el.dataset.ru : el.dataset.ru;
       if (value == null) return;
@@ -37,7 +40,6 @@
       btn.setAttribute('aria-pressed', String(btn.dataset.langBtn === lang));
     });
     try { localStorage.setItem(STORE_KEY, lang); } catch (_) { /* private mode */ }
-    renderDynamic();
   }
 
   function storedLang() {
@@ -102,6 +104,35 @@
     return out.join('');
   }
 
+  /* page metadata for the single case template: one HTML file serves every case,
+     so the title / description / og:* / canonical have to be written per case or
+     every link previews as the same generic page */
+  function setMeta(title, description, canonical) {
+    document.title = title;
+    const setMetaTag = (attr, key, value) => {
+      let el = document.head.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', value);
+    };
+    if (description) setMetaTag('name', 'description', description);
+    setMetaTag('property', 'og:title', title);
+    if (description) setMetaTag('property', 'og:description', description);
+    setMetaTag('property', 'og:url', canonical);
+    setMetaTag('property', 'og:type', 'article');
+    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    let link = document.head.querySelector('link[rel="canonical"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', canonical);
+  }
+
   /* --------------------------------------------------------------- manifest -- */
 
   async function loadManifest() {
@@ -146,7 +177,7 @@
     if (!host) return;
     const featured = state.cases.filter((c) => c.featured).slice(0, 4);
     host.innerHTML = featured.map(caseCard).join('') ||
-      '<p class="empty-state">no featured cases yet</p>';
+      `<p class="empty-state">${state.lang === 'en' ? 'no featured cases yet' : 'избранных кейсов пока нет'}</p>`;
     observeReveals();
   }
 
@@ -175,7 +206,7 @@
     const list = state.filter === 'all'
       ? state.cases
       : state.cases.filter((c) => c.theme === state.filter);
-    const empty = '<p class="empty-state">no cases in this category yet</p>';
+    const empty = `<p class="empty-state">${state.lang === 'en' ? 'no cases in this category yet' : 'в этом направлении кейсов пока нет'}</p>`;
 
     const single = document.getElementById('case-grid');
     if (single) {
@@ -202,28 +233,34 @@
     if (!host) return;
     const id = new URLSearchParams(location.search).get('project');
     const c = caseById(id);
+    const caseUrl = (cid) => `${location.href.split('?')[0]}?project=${encodeURIComponent(cid)}`;
     if (!c) {
+      setMeta(state.lang === 'en' ? 'Case not found — MsBinaryLily' : 'Кейс не найден — MsBinaryLily',
+        state.lang === 'en' ? 'No case with that id. All projects are on the projects page.' : 'Кейса с таким идентификатором нет. Все проекты — на странице проектов.',
+        `${location.href.split('?')[0].replace(/case\.html$/, 'projects.html')}`);
       host.innerHTML = `<section class="section-panel"><div class="wrap">
         <p class="kicker">404</p>
-        <h2>${state.lang === 'en' ? 'Case not found' : 'Кейс не найден'}</h2>
+        <h1 class="page-title">${state.lang === 'en' ? 'Case not found' : 'Кейс не найден'}</h1>
         <p class="lede">${state.lang === 'en' ? 'No case with the id' : 'Нет кейса с идентификатором'} <code>${escapeHtml(id || '')}</code>.</p>
         <p><a class="btn" href="projects.html"><span>${state.lang === 'en' ? 'All projects' : 'Все проекты'}</span></a></p>
       </div></section>`;
       return;
     }
+    setMeta(`${t(c.title)} — MsBinaryLily`,
+      String(t(c.overview) || '').split(/\n/)[0].slice(0, 180), caseUrl(c.id));
 
     const order = state.cases;
     const i = order.indexOf(c);
     const prev = order[i - 1];
     const next = order[i + 1];
     const sections = [
-      ['role', 'role', 'Роль'],
-      ['problem', 'context', 'Контекст'],
-      ['solution', 'solution', 'Решение'],
-      ['impact', 'impact', 'Результат'],
-      ['deepDive', 'deep-dive', 'Технические детали'],
-      ['lessons', 'lessons', 'Выводы'],
-      ['related', 'related', 'Связанное'],
+      ['role', 'role', { ru: 'Роль', en: 'Role' }],
+      ['problem', 'context', { ru: 'Контекст', en: 'Context' }],
+      ['solution', 'solution', { ru: 'Решение', en: 'Solution' }],
+      ['impact', 'impact', { ru: 'Результат', en: 'Outcome' }],
+      ['deepDive', 'deep-dive', { ru: 'Технические детали', en: 'Technical deep-dive' }],
+      ['lessons', 'lessons', { ru: 'Выводы', en: 'Lessons learned' }],
+      ['related', 'related', { ru: 'Связанное', en: 'Related' }],
     ].filter(([key]) => c[key] && t(c[key]));
 
     const status = (c.translation || {})[state.lang] || 'missing';
@@ -237,7 +274,7 @@
     host.innerHTML = `
       <section class="case-head">
         <div class="wrap">
-          <p class="kicker">${themeLabel(c.theme)} · case</p>
+          <p class="kicker">${themeLabel(c.theme)} · ${state.lang === 'en' ? 'case' : 'кейс'}</p>
           <h1>${escapeHtml(t(c.title))}</h1>
           <p class="lede">${escapeHtml(t(c.overview).split(/\n/)[0])}</p>
           <div class="chips">${(c.stack || []).map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('')}</div>
@@ -250,7 +287,7 @@
             <div class="prose">
               ${sections.map(([key, id, label]) => `
                 <div class="case-section" id="${id}">
-                  <h2>${label}</h2>
+                  <h2>${escapeHtml(t(label))}</h2>
                   ${mdToHtml(t(c[key]))}
                 </div>`).join('')}
             </div>

@@ -20,6 +20,9 @@
   --neon-cyan: #00e5ff;
   --neon-violet: #7c4dff;
   --neon-soft: rgba(0, 229, 255, 0.16);
+  /* the readable form of the neon on light surfaces: full cyan is a fill colour,
+     not a text colour (4.5:1 on the card surface is the floor) */
+  --neon-ink: #05636f;
   --hologlow: linear-gradient(135deg, #00e5ff 0%, #7c4dff 100%);
 
   /* binary duality: a cold pole and a hot pole, meeting at violet.
@@ -120,7 +123,10 @@ a { color: inherit; }
   color: var(--ink-dim);
   margin: 0 0 0.6rem;
 }
-.on-carbon .kicker, .carbon .kicker, .hero .kicker { color: var(--neon-cyan); }
+/* dark-surface contexts: the class that exists in the markup is `section-carbon`,
+   so the kicker switch has to be keyed on it (and on the case head) — the old
+   `.carbon` / `.on-carbon` selectors never matched anything */
+.section-carbon .kicker, .hero .kicker, .case-head .kicker { color: var(--neon-cyan); }
 
 .holo-text {
   background: var(--hologlow);
@@ -148,6 +154,9 @@ section { padding-block: clamp(3.2rem, 8vw, 6rem); }
 h1, h2, h3 { font-family: var(--font-display); font-weight: 600; line-height: 1.1; margin: 0 0 0.7rem; }
 h2 { font-size: var(--step-h2); letter-spacing: -0.01em; }
 h3 { font-size: var(--step-h3); }
+/* a page's own top heading is an <h1>: keep the section-title scale so promoting
+   it from <h2> does not resize the page */
+h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 .lede { font-size: 1.06rem; max-width: 62ch; color: var(--ink-dim); }
 .section-carbon .lede { color: var(--text-on-dark-dim); }
 
@@ -225,7 +234,7 @@ h3 { font-size: var(--step-h3); }
   color: var(--ink-dim);
   white-space: nowrap;
 }
-.chip-neon { border-color: var(--neon-cyan); color: #067d92; }
+.chip-neon { border-color: var(--neon-cyan); color: var(--neon-ink); }
 .section-carbon .chip { border-color: var(--line-dark); color: var(--text-on-dark-dim); }
 .section-carbon .chip-neon { border-color: var(--neon-cyan); color: var(--neon-cyan); }
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
@@ -266,16 +275,25 @@ h3 { font-size: var(--step-h3); }
 .nav a:hover { color: var(--text-on-dark); background: rgba(0, 229, 255, 0.1); }
 .nav a[aria-current="page"] { color: var(--neon-cyan); background: rgba(0, 229, 255, 0.12); }
 
+/* the language switch: a plain 1px border is cut off along the clip-path chamfers,
+   so the frame is a clipped fill inset by 1px of padding instead — complete rim on
+   every side, including the two diagonals, with both halves sitting inside it */
 .lang {
-  display: inline-flex; margin-left: 0.4rem;
-  border: 1px solid #3d4553;
-  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  --lang-clip: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  --lang-line: #3d4553;
+  --lang-surface: rgba(11, 12, 16, 0.92);
+  position: relative; display: inline-flex; margin-left: 0.4rem;
+  clip-path: var(--lang-clip);
+  background: var(--lang-line);
+  padding: 1px;
 }
+.lang > button { position: relative; z-index: 1; }
 .lang button {
   font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em;
-  background: transparent; color: var(--text-on-dark-dim);
+  background: var(--lang-surface); color: var(--text-on-dark-dim);
   border: 0; padding: 0.5rem 0.6rem; cursor: pointer;
 }
+.lang button:hover { color: var(--text-on-dark); }
 .lang button[aria-pressed="true"] { background: var(--neon-cyan); color: #04121a; }
 
 .nav-toggle {
@@ -400,7 +418,7 @@ h3 { font-size: var(--step-h3); }
 .card .chips { margin-top: auto; padding-top: 0.6rem; }
 .card-flag {
   font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.1em;
-  text-transform: uppercase; color: #067d92;
+  text-transform: uppercase; color: var(--neon-ink);
   border: 1px solid var(--neon-cyan); padding: 0.2rem 0.45rem;
 }
 
@@ -418,10 +436,21 @@ h3 { font-size: var(--step-h3); }
   padding: clamp(1.1rem, 3vw, 1.8rem);
   backdrop-filter: blur(6px);
 }
+/* the ring surface is translucent, so the dark ring colour shows through as the
+   plate: a `.holo.ring` block sits on a dark surface and takes the dark-surface
+   tokens. A bare `.holo` has no plate at all (the case sidebar uses it), so it
+   must keep inheriting whatever surface its section provides. */
+.holo.ring { color: var(--text-on-dark); }
+.holo.ring .kicker, .holo.ring .lede, .holo.ring .footer-meta, .holo.ring p { color: var(--text-on-dark-dim); }
+.holo.ring .chip { color: var(--text-on-dark-dim); }
+.holo.ring .chip-neon { color: var(--neon-cyan); }
 
 /* ------------------------------------------------------------------- lists -- */
 .plain-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
 .plain-list li { display: grid; gap: 0.35rem; }
+/* documentation chips carry long one-line strings: let them wrap instead of
+   pushing the page sideways on a 360px screen */
+.plain-list .chip { white-space: normal; max-width: 100%; }
 
 .prose { max-width: 68ch; }
 .prose p { margin: 0 0 0.9rem; }
@@ -435,6 +464,11 @@ h3 { font-size: var(--step-h3); }
 
 /* -------------------------------------------------------------- case page -- */
 .case-head { background: var(--carbon); color: var(--text-on-dark); padding-block: clamp(2rem, 5vw, 3.4rem); }
+/* the case head is a carbon band, so its children need the dark-surface tokens —
+   the light-surface defaults left the lede and the chips at ~2.5:1 */
+.case-head .lede { color: var(--text-on-dark-dim); }
+.case-head .chip { border-color: var(--line-dark); color: var(--text-on-dark-dim); }
+.case-head .chip-neon { border-color: var(--neon-cyan); color: var(--neon-cyan); }
 .case-head .chips { margin-top: 1rem; }
 .case-body { display: grid; gap: clamp(1.6rem, 4vw, 2.6rem); }
 .case-section h2 {
@@ -482,22 +516,24 @@ h3 { font-size: var(--step-h3); }
 .lab-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .lab-badge {
   position: absolute; left: 0; bottom: 0; z-index: 1;
-  font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.12em;
+  font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--text-on-dark-dim);
   background: rgba(11, 12, 16, 0.74);
   border-top: 1px solid var(--line-dark); border-right: 1px solid var(--line-dark);
   padding: 0.45rem 0.7rem;
 }
 .lab-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.1rem; }
+/* the controls row sits on the light panel, not on the dark stage, so it takes the
+   light-surface tokens (it was styled for the carbon plate and read at ~1.7:1) */
 .lab-controls button {
   font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.08em;
-  text-transform: uppercase; background: transparent; color: var(--text-on-dark-dim);
-  border: 1px solid var(--line-dark); padding: 0.55rem 0.85rem; cursor: pointer;
+  text-transform: uppercase; background: transparent; color: var(--ink-dim);
+  border: 1px solid var(--line); padding: 0.55rem 0.85rem; cursor: pointer;
   clip-path: var(--clip-btn);
 }
-.lab-controls button:hover { color: var(--text-on-dark); border-color: var(--neon-cyan); }
+.lab-controls button:hover { color: var(--ink); border-color: var(--neon-cyan); }
 .lab-controls button[aria-pressed="true"] { background: var(--neon-cyan); color: #04121a; border-color: var(--neon-cyan); }
-.lab-controls button[data-act] { border-color: var(--neon-violet); color: #c9b6ff; }
+.lab-controls button[data-act] { border-color: var(--neon-violet); color: #5b32d6; }
 .lab-spec { display: grid; gap: var(--gap); margin-top: 2.4rem; }
 @media (min-width: 900px) { .lab-spec { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
