@@ -41,6 +41,10 @@
   const SEAM_COLS=[COLD,HOT,VIOLET];                 // the two poles, violet between
   const BASE_AMB=[6,7,9], BASE_LIT=[148,153,162];    // the plate stays greyscale
   const PALE=24;
+/* brightness bands across a lit seam. More bands = a smoother gradient with the
+   same raster cost (each edge still lands in exactly one), so this is nearly
+   free smoothness — at 6 the ramp stepped visibly as the front swept */
+const BANDS=10;
   const rgb=(c,a)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
   const mix=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
   const clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -65,12 +69,12 @@
   const P={
     cell:70, apex:.42, hotspot:5, hotR:[120,340], hotGain:[.35,.7],
     hotCost:1.1, noise:.45,
-    spread:64, rise:150, hold:90, fade:1750,
+    spread:64, rise:240, hold:120, fade:1750,
     speed:[560,900], runs:3, gap:[.6,1.8],
     relightDiv:16,                                     // re-shade 1/N of the plate per frame
     maxDpr:1,                                          // CSS pixels: the plate is soft anyway
     astarBudget:260,                                   // node expansions per frame while routing
-    haze:18,                                           // px width of the soft bloom (0 disables it)
+    haze:10,                                           // px width of the wavefront bloom (0 disables it)
     seam:[3.4,1.6], lamp:.30
   };
 
@@ -422,7 +426,7 @@
   function makeEngine(){
     const F=buildPlate();
     const G=buildGraph(F);
-    let runs=[], nextRun=0.6, t=0, pending=null;
+    let runs=[], nextRun=0.6, t=0, pending=null, draws=0;
     const wanted=[];                                   // queued clicks, served in turn
     const small=S.W<700;
 
@@ -526,7 +530,7 @@
       }
 
       const bucket=[];
-      for(let i=0;i<18;i++) bucket.push([]);
+      for(let i=0;i<3*BANDS;i++) bucket.push([]);
       for(let i=runs.length-1;i>=0;i--){
         const r=runs[i];
         r.front+=r.speed*dt;
@@ -536,7 +540,7 @@
           const k=energy(r.front-e.d);
           if(k<=.10) continue;                         // the far tail is invisible
           if(busy&&k<.45) continue;                    // mid-scroll: only the bright half
-          bucket[r.col*6+Math.min(5,(k*6)|0)].push(e);
+          bucket[r.col*BANDS+Math.min(BANDS-1,(k*BANDS)|0)].push(e);
         }
         if(r.front>r.maxD+P.hold+P.fade+40) runs.splice(i,1);
       }
@@ -565,16 +569,19 @@
       ctx.globalCompositeOperation='lighter';
       ctx.lineCap='round';
       /* one soft haze under the bright half of every run */
+      /* the soft bloom goes under the wavefront only — the leading band, which is
+         the part she asked to glow — instead of the whole bright half, which was
+         the single most expensive pass in the frame */
       ctx.beginPath(); let any=false;
-      for(let ci=0;ci<3;ci++) for(const b of [4,5]) for(const e of bucket[ci*6+b]){
+      for(let ci=0;ci<3;ci++) for(const e of bucket[ci*BANDS+BANDS-1]){
         ctx.moveTo(e.ax,e.ay); ctx.lineTo(e.bx,e.by); any=true;
       }
-      if(any&&!small&&!busy&&P.haze>0){ ctx.strokeStyle=rgb(mix(SEAM_COLS[0],WHITE,.25),.05); ctx.lineWidth=P.haze; ctx.stroke(); }
+      if(any&&!small&&!busy&&P.haze>0){ ctx.strokeStyle=rgb(mix(SEAM_COLS[0],WHITE,.25),.06); ctx.lineWidth=P.haze; ctx.stroke(); }
       for(let ci=0;ci<3;ci++){
-        for(let b=0;b<6;b++){
-          const arr=bucket[ci*6+b];
+        for(let b=0;b<BANDS;b++){
+          const arr=bucket[ci*BANDS+b];
           if(!arr.length) continue;
-          const k=.08+.92*smoothstep((b+.5)/6);
+          const k=.08+.92*smoothstep((b+.5)/BANDS);
           ctx.beginPath();
           for(const e of arr){ ctx.moveTo(e.ax,e.ay); ctx.lineTo(e.bx,e.by); }
           ctx.strokeStyle=rgb(SEAM_COLS[ci],.44*k); ctx.lineWidth=P.seam[0]; ctx.stroke();
@@ -582,8 +589,9 @@
         }
       }
       ctx.globalCompositeOperation='source-over';
+      draws++;
     }
-    return {frame,press(x,y){ if(wanted.length<3) wanted.push({x,y}); }};
+    return {frame,draws:()=>draws,press(x,y){ if(wanted.length<3) wanted.push({x,y}); }};
   }
 
   const inHero=!!canvas.closest('.hero');
@@ -594,11 +602,18 @@
        plate would be darkened twice and the current dimmed with it */
     if(inHero) hero.classList.add('is-live');
   }
+  let avgDelta=16.7, lastRaf=0;
   function loop(now){
     raf=requestAnimationFrame(loop);
+    const d=now-lastRaf; lastRaf=now;
+    if(d>0&&d<100) avgDelta=avgDelta*.92+d*.08;        // ignore tab-switch spikes
     if(!running||!visible) return;
-    if(now-lastFrame<33) return;                       // 30fps: this is ambience
-    const dt=Math.min(.05,(now-lastFrame)/1000||.033);
+    /* Draw on every refresh when the machine keeps up, and every second one when
+       it does not. A steady 30 on a 60Hz panel reads as judder on thin bright
+       lines, and an irregular gate reads worse still, so the threshold follows
+       the interval actually being achieved. */
+    if(now-lastFrame<(avgDelta<19?14:30)) return;
+    const dt=Math.min(.05,(now-lastFrame)/1000||.0167);
     lastFrame=now;
     pointer.x+=(pointer.tx-pointer.x)*.18;
     pointer.y+=(pointer.ty-pointer.y)*.18;
@@ -636,6 +651,7 @@
        can time a frame including rasterisation instead of only command
        submission — and can ablate one layer at a time by tuning  */
     step(dt){ if (engine) engine.frame(dt || 1 / 30); },
+    drawn(){ return engine ? engine.draws() : 0; },
     pause(){ running = false; cancelAnimationFrame(raf); },
     resume(){ if (!running){ running = true; lastFrame = performance.now(); raf = requestAnimationFrame(loop); } }
   };
