@@ -315,7 +315,9 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
   display: grid;
   align-items: center;
 }
-#ambient { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.95; }
+/* full opacity: the fallback sits behind this canvas, so the 0.95 blend was
+   costing a full-screen composite pass per frame for nothing */
+#ambient { position: absolute; inset: 0; width: 100%; height: 100%; }
 /* the plate is textured now, so the copy sits on a scrim rather than on black:
    dense on the left where the text is, open on the right where the plate and the
    emblem show through. pointer-events:none keeps the canvas interactive. */

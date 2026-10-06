@@ -67,6 +67,10 @@
     hotCost:1.1, noise:.45,
     spread:64, rise:150, hold:90, fade:1750,
     speed:[560,900], runs:3, gap:[.6,1.8],
+    relightDiv:16,                                     // re-shade 1/N of the plate per frame
+    maxDpr:1,                                          // CSS pixels: the plate is soft anyway
+    astarBudget:260,                                   // node expansions per frame while routing
+    haze:18,                                           // px width of the soft bloom (0 disables it)
     seam:[3.4,1.6], lamp:.30
   };
 
@@ -76,7 +80,7 @@
   let raf=0,lastFrame=0,running=true,engine=null;
 
   function stage(){
-    S.dpr=Math.min(window.devicePixelRatio||1,1.5);
+    S.dpr=Math.min(window.devicePixelRatio||1,P.maxDpr||1);
     S.W=canvas.clientWidth||1200; S.H=canvas.clientHeight||620;
     canvas.width=Math.floor(S.W*S.dpr); canvas.height=Math.floor(S.H*S.dpr);
     ctx.setTransform(S.dpr,0,0,S.dpr,0,0);
@@ -205,9 +209,42 @@
     vg.addColorStop(0,'rgba(4,5,7,0)'); vg.addColorStop(1,'rgba(4,5,7,.80)');
     pg.fillStyle=vg; pg.fillRect(0,0,S.W,S.H);
 
-    const field=document.createElement('canvas');
-    field.width=Math.floor(S.W*S.dpr); field.height=Math.floor(S.H*S.dpr);
-    const fg=field.getContext('2d'); fg.setTransform(S.dpr,0,0,S.dpr,0,0);
+    /* The scrim lives *here*, not in a layer above the canvas: it darkens the
+       plate and the facet colours, while the seams — drawn last, additively —
+       stay at full brightness exactly where the copy sits. Same profile as
+       .hero::after in css/main.css, so ?static and the live canvas agree. */
+    const SC=[11,12,16];
+    const SC_STOPS=[[0,.95],[.30,.88],[.46,.72],[.64,.34],[.80,.08],[.90,0],[1,0]];
+    const scrimLine=(()=>{
+      if(!inHero) return null;                       // the laboratory stage has no scrim
+      if(S.W<900) return {x0:0,y0:0,dx:0,dy:1,L:S.H,stops:[[0,.62],[1,.82]]};
+      const a=100*Math.PI/180;                       // css 100deg
+      const L=Math.abs(S.W*Math.sin(a))+Math.abs(S.H*Math.cos(a));
+      const dx=Math.sin(a), dy=-Math.cos(a);
+      return {x0:S.W*.5-dx*L*.5, y0:S.H*.5-dy*L*.5, dx, dy, L, stops:SC_STOPS};
+    })();
+    const scrimA=(x,y)=>{
+      if(!scrimLine) return 0;
+      const {x0,y0,dx,dy,L,stops}=scrimLine;
+      const t=((x-x0)*dx+(y-y0)*dy)/L;
+      if(t<=stops[0][0]) return stops[0][1];
+      for(let i=1;i<stops.length;i++){
+        if(t<=stops[i][0]){
+          const k=(t-stops[i-1][0])/((stops[i][0]-stops[i-1][0])||1);
+          return stops[i-1][1]+(stops[i][1]-stops[i-1][1])*k;
+        }
+      }
+      return stops[stops.length-1][1];
+    };
+    if(scrimLine){
+      const sg=pg.createLinearGradient(scrimLine.x0,scrimLine.y0,
+        scrimLine.x0+scrimLine.dx*scrimLine.L, scrimLine.y0+scrimLine.dy*scrimLine.L);
+      for(const st of scrimLine.stops) sg.addColorStop(st[0],`rgba(${SC[0]},${SC[1]},${SC[2]},${st[1]})`);
+      pg.fillStyle=sg; pg.fillRect(0,0,S.W,S.H);
+    }
+
+    /* one baked layer, so the frame costs a single blit */
+    const fg=pg;
     let relightAt=0;
     /* ±1 palette step of position-hashed dither: the plate is a quantised ramp,
        so neighbouring facets can otherwise step visibly on cheaper panels. The
@@ -220,15 +257,18 @@
       for(let i=0;i<count;i++){
         const t=tiles[(relightAt++)%tiles.length];
         const dit=dither(t);
+        const k=scrimA(t.cx,t.cy);                   // the facet is baked dark where the copy is
+        const row=pal;
         for(const f of t.facets){
           const lv=clamp((f.n[0]*L[0]+f.n[1]*L[1]+f.n[2]*L[2]-.34)/.58+dit,0,1);
-          fg.fillStyle=rgb(pal[clamp(Math.round(lv*PALE),0,PALE)],1);
+          const c=row[clamp(Math.round(lv*PALE),0,PALE)];
+          fg.fillStyle=rgb(k>0?mix(c,SC,k):c,1);
           fg.fill(f.p);
         }
       }
     }
     relight(lightAt(0), tiles.length);                 // first bake
-    return {R,tiles,plate,field,rel,relight};
+    return {R,tiles,plate,rel,relight};
   }
 
   /* ============================================================== graph ===
@@ -285,33 +325,45 @@
     return {nodes,edges,minCost,buckets,gx,gy,CELLX};
   }
 
-  function astar(G,start,goal){
-    const g=new Map(), from=new Map(), closed=new Set();
-    const h=n=>Math.hypot(n.x-goal.x,n.y-goal.y)*G.minCost;
-    const open=Heap();
-    g.set(start.id,0); open.push(start.id,h(start));
-    while(open.size){
+  /* A* that can be advanced a few expansions at a time. A spawn is ~3000 node
+     expansions, which is 7-14 ms of blocked main thread if done in one go — a
+     visible hitch roughly once a second. Sliced, the same work is ~1 ms per
+     frame and the route is ready well before the previous run has faded. */
+  function astarStart(G,start,goal){
+    const s={G,goal,start,g:new Map(),from:new Map(),closed:new Set(),open:Heap(),
+      h:n=>Math.hypot(n.x-goal.x,n.y-goal.y)*G.minCost,path:null,done:false};
+    s.g.set(start.id,0);
+    s.open.push(start.id,s.h(start));
+    return s;
+  }
+  function astarAdvance(s,budget){
+    if(s.done) return true;
+    const {G,goal,g,from,closed,open,h}=s;
+    let n=0;
+    while(open.size&&n<budget){
       const [id]=open.pop();
       if(closed.has(id)) continue;
-      closed.add(id);
-      const n=G.nodes[id];
-      if(n===goal){
-        const path=[]; let cur=n;
+      closed.add(id); n++;
+      const node=G.nodes[id];
+      if(node===goal){
+        const path=[]; let cur=node;
         while(cur){ path.push(cur); cur=from.get(cur.id); }
-        return path.reverse();
+        s.path=path.reverse(); s.done=true;
+        return true;
       }
       const gid=g.get(id);
-      for(const nb of n.nb){
+      for(const nb of node.nb){
         if(closed.has(nb.to.id)) continue;
         const ng=gid+nb.cost, prev=g.get(nb.to.id);
         if(prev===undefined||ng<prev){
           g.set(nb.to.id,ng);
-          from.set(nb.to.id,n);
+          from.set(nb.to.id,node);
           open.push(nb.to.id,ng+h(nb.to));
         }
       }
     }
-    return null;
+    if(!open.size){ s.done=true; s.path=null; }        // no route exists
+    return s.done;
   }
 
   /* every node within `budget` extra cost of the route */
@@ -370,33 +422,8 @@
   function makeEngine(){
     const F=buildPlate();
     const G=buildGraph(F);
-    /* The copy needs a dark ground on its left flank, but the current must not be
-       dimmed along with the plate — so the scrim is painted into the plate layer,
-       under the seams, and the CSS scrim steps aside while the canvas is live.
-       Same geometry as the CSS gradient, so ?static and live agree. */
-    const scrim=(()=>{
-      if(S.W<900){
-        const g=ctx.createLinearGradient(0,0,0,S.H);
-        g.addColorStop(0,'rgba(11,12,16,.62)'); g.addColorStop(1,'rgba(11,12,16,.82)');
-        return g;
-      }
-      const a=100*Math.PI/180;                                    // css 100deg
-      const L=Math.abs(S.W*Math.sin(a))+Math.abs(S.H*Math.cos(a));
-      const dx=Math.sin(a), dy=-Math.cos(a);
-      const x0=S.W*.5-dx*L*.5, y0=S.H*.5-dy*L*.5;
-      const g=ctx.createLinearGradient(x0,y0,x0+dx*L,y0+dy*L);
-      /* mirrors the .hero::after profile in css/main.css stop for stop, so the
-         live scrim matches what ?static shows (and what was contrast-measured) */
-      g.addColorStop(0,'rgba(11,12,16,.95)');
-      g.addColorStop(.30,'rgba(11,12,16,.88)');
-      g.addColorStop(.46,'rgba(11,12,16,.72)');
-      g.addColorStop(.64,'rgba(11,12,16,.34)');
-      g.addColorStop(.80,'rgba(11,12,16,.08)');
-      g.addColorStop(.90,'rgba(11,12,16,0)');
-      g.addColorStop(1,'rgba(11,12,16,0)');
-      return g;
-    })();
-    let runs=[], nextRun=0.6, t=0;
+    let runs=[], nextRun=0.6, t=0, pending=null;
+    const wanted=[];                                   // queued clicks, served in turn
     const small=S.W<700;
 
     const nearestNode=(x,y)=>{
@@ -411,7 +438,10 @@
       const R=Math.max(S.W,S.H)*.62;
       return nearestNode(S.W*.5+Math.cos(a)*R, S.H*.5+Math.sin(a)*R);
     };
-    function makeRun(opts){
+    /* A run is built in two parts so the search never blocks a frame: beginRun
+       picks the terminals and starts the sliced A*; finishRun does the corridor,
+       the peel and the cost field, all of which are small. */
+    function beginRun(opts){
       opts=opts||{};
       let src,dst;
       if(opts.x!==undefined){
@@ -424,11 +454,14 @@
         dst=rimNode(a+Math.PI*(.7+Math.random()*.6));
       }
       if(!src||!dst||src===dst) return null;
-      const path=astar(G,src,dst);
+      return {src,dst,ast:astarStart(G,src,dst)};
+    }
+    function finishRun(p){
+      const path=p.ast.path;
       if(!path||path.length<4) return null;
       const lit=expand(G,path,P.spread);
-      pruneDeadEnds(lit,new Set([src,dst]));
-      const dist=distFrom(G,lit,src);
+      pruneDeadEnds(lit,new Set([p.src,p.dst]));
+      const dist=distFrom(G,lit,p.src);
       const es=[];
       let maxD=0;
       for(const n of lit){
@@ -447,7 +480,13 @@
       return {es,maxD,col:roll<.45?0:(roll<.88?1:2),front:0,
         speed:P.speed[0]+Math.random()*(P.speed[1]-P.speed[0])};
     }
-    for(let i=0;i<P.runs;i++){ const r=makeRun(); if(r) runs.push(r); }
+    function spawnNow(opts){                           // load time only: finish at once
+      const p=beginRun(opts);
+      if(!p) return null;
+      astarAdvance(p.ast,1e9);
+      return finishRun(p);
+    }
+    for(let i=0;i<P.runs;i++){ const r=spawnNow(); if(r) runs.push(r); }
 
     /* cost > front is untouched, just behind the front glows, far behind fades */
     function energy(x){
@@ -459,19 +498,31 @@
 
     function frame(dt){
       t+=dt;
+      /* Scrolling is the expensive moment — a full-screen canvas plus a blurred
+         sticky nav re-compositing on every step — so two passes that read as
+         noise mid-scroll are dropped while it lasts: the drift re-shade and the
+         wide haze. The runs and the scrim are untouched. */
+      const busy=performance.now()-lastScroll<220;
       ctx.clearRect(0,0,S.W,S.H);
-      ctx.drawImage(F.plate,0,0,S.W,S.H);
-      ctx.drawImage(F.field,0,0,S.W,S.H);
-      ctx.fillStyle=scrim;                    // darkens the plate, not the current
-      ctx.fillRect(0,0,S.W,S.H);
-      /* global illumination: a slice of the plate is re-shaded against the
-         drifting light every frame, so the pyramids themselves shift */
-      F.relight(lightAt(t), Math.ceil(F.tiles.length/(small?16:10)));
+      ctx.drawImage(F.plate,0,0,S.W,S.H);            // one blit; the scrim is baked in
+      if(!busy) F.relight(lightAt(t), Math.ceil(F.tiles.length/(small?16:P.relightDiv)));
 
       nextRun-=dt;
-      if(nextRun<=0&&runs.length<P.runs){
-        const r=makeRun(); if(r) runs.push(r);
-        nextRun=P.gap[0]+Math.random()*(P.gap[1]-P.gap[0]);
+      if(pending){
+        /* advance the pending route a slice at a time; it is ready long before
+           the previous run has faded out */
+        if(astarAdvance(pending.ast, small?160:P.astarBudget)){
+          const r=finishRun(pending);
+          pending=null;
+          if(r) runs.push(r);
+          nextRun=P.gap[0]+Math.random()*(P.gap[1]-P.gap[0]);
+        }
+      } else if(wanted.length){
+        pending=beginRun(wanted.shift());
+        if(!pending) nextRun=.3;
+      } else if(nextRun<=0&&runs.length<P.runs){
+        pending=beginRun(null);
+        if(!pending) nextRun=.5;
       }
 
       const bucket=[];
@@ -484,6 +535,7 @@
           if(e.d<tailAt||e.d>r.front) continue;
           const k=energy(r.front-e.d);
           if(k<=.10) continue;                         // the far tail is invisible
+          if(busy&&k<.45) continue;                    // mid-scroll: only the bright half
           bucket[r.col*6+Math.min(5,(k*6)|0)].push(e);
         }
         if(r.front>r.maxD+P.hold+P.fade+40) runs.splice(i,1);
@@ -517,7 +569,7 @@
       for(let ci=0;ci<3;ci++) for(const b of [4,5]) for(const e of bucket[ci*6+b]){
         ctx.moveTo(e.ax,e.ay); ctx.lineTo(e.bx,e.by); any=true;
       }
-      if(any&&!small){ ctx.strokeStyle=rgb(mix(SEAM_COLS[0],WHITE,.25),.05); ctx.lineWidth=18; ctx.stroke(); }
+      if(any&&!small&&!busy&&P.haze>0){ ctx.strokeStyle=rgb(mix(SEAM_COLS[0],WHITE,.25),.05); ctx.lineWidth=P.haze; ctx.stroke(); }
       for(let ci=0;ci<3;ci++){
         for(let b=0;b<6;b++){
           const arr=bucket[ci*6+b];
@@ -531,7 +583,7 @@
       }
       ctx.globalCompositeOperation='source-over';
     }
-    return {frame,press(x,y){ const r=makeRun({x,y}); if(r) runs.push(r); }};
+    return {frame,press(x,y){ if(wanted.length<3) wanted.push({x,y}); }};
   }
 
   const inHero=!!canvas.closest('.hero');
@@ -544,7 +596,7 @@
   }
   function loop(now){
     raf=requestAnimationFrame(loop);
-    if(!running) return;
+    if(!running||!visible) return;
     if(now-lastFrame<33) return;                       // 30fps: this is ambience
     const dt=Math.min(.05,(now-lastFrame)/1000||.033);
     lastFrame=now;
@@ -555,6 +607,13 @@
   document.addEventListener('visibilitychange',()=>{   // don't burn frames off-screen
     running=!document.hidden; lastFrame=performance.now();
   });
+  /* and don't burn them once the hero itself has been scrolled away */
+  let visible=true;
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(e=>{ visible=e[0].isIntersecting; },{threshold:0}).observe(hero);
+  }
+  let lastScroll=0;
+  window.addEventListener('scroll',()=>{ lastScroll=performance.now(); },{passive:true});
   let rz=0;
   window.addEventListener('resize',()=>{
     clearTimeout(rz); rz=setTimeout(boot,260);         // rebuild the plate at the new size
@@ -572,6 +631,12 @@
   window.AmbientEngine = {
     base: Object.assign({}, P),
     tune(over){ Object.assign(P, over || {}); boot(); },
-    fire(x, y){ if (engine) engine.press(x, y); }
+    fire(x, y){ if (engine) engine.press(x, y); },
+    /* diagnostics: drive one frame by hand and stop/start the loop, so a probe
+       can time a frame including rasterisation instead of only command
+       submission — and can ablate one layer at a time by tuning  */
+    step(dt){ if (engine) engine.frame(dt || 1 / 30); },
+    pause(){ running = false; cancelAnimationFrame(raf); },
+    resume(){ if (!running){ running = true; lastFrame = performance.now(); raf = requestAnimationFrame(loop); } }
   };
 })();
