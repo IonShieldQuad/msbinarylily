@@ -55,11 +55,16 @@
   /* the level alphas, built once at load: no colour string is allocated per frame */
   const LEV_K=[];
   for(let b=0;b<LEVELS;b++) LEV_K.push(.08+.92*smoothstep((b+.5)/LEVELS));
-  const TUBE=[], CORE=[];
+  const TUBE=[], CORE=[], CORE_K=[];
   for(const c of SEAM_COLS){
     const cc=mix(c,WHITE,.30);
     TUBE.push(LEV_K.map(k=>rgb(c,.44*k)));
     CORE.push(LEV_K.map(k=>rgb(cc,.90*k)));
+    /* indexed by a raw 0..1 k rather than by level: used as a gradient stop when
+       the brightness is interpolated along a seam */
+    const kk=[];
+    for(let i=0;i<LEVELS;i++) kk.push(rgb(cc,.90*(i/(LEVELS-1))));
+    CORE_K.push(kk);
   }
 
   /* the key light drifts on two out-of-phase cycles: azimuth ±24° over ~40s,
@@ -81,12 +86,13 @@
   const P={
     cell:70, apex:.42, hotspot:5, hotR:[120,340], hotGain:[.35,.7],
     hotCost:1.1, noise:.45,
-    spread:64, rise:240, hold:120, fade:1750,
+    spread:64, rise:420, hold:140, fade:1750,
     speed:[560,900], runs:3, gap:[.6,1.8],
     relightDiv:16,                                     // re-shade 1/N of the plate per frame
     maxDpr:1,                                          // CSS pixels: the plate is soft anyway
     astarBudget:260,                                   // node expansions per frame while routing
     haze:10,                                           // px width of the wavefront bloom (0 disables it)
+    interp:1,                                          // ramp brightness along each seam (0 = flat per seam)
     seam:[3.4,1.6], lamp:.30
   };
 
@@ -488,7 +494,7 @@
           if(dn===undefined||dm===undefined) continue;
           const d=(dn+dm)*.5;
           if(d>maxD) maxD=d;
-          es.push({ax:n.x, ay:n.y, bx:m.x, by:m.y, d});
+          es.push({ax:n.x, ay:n.y, bx:m.x, by:m.y, d, da:dn, db:dm});
         }
       }
       if(es.length<6) return null;
@@ -552,6 +558,9 @@
           const k=energy(r.front-e.d);
           if(k<=.02) continue;                         // the far tail is invisible
           if(busy&&k<.45) continue;                    // mid-scroll: only the bright half
+          if(P.interp){                                // per-endpoint values for the ramp
+            e.ka=energy(r.front-e.da); e.kb=energy(r.front-e.db);
+          }
           bucket[r.col*LEVELS+Math.min(LEVELS-1,(k*LEVELS)|0)].push(e);
         }
         if(r.front>r.maxD+P.hold+P.fade+40) runs.splice(i,1);
@@ -572,7 +581,9 @@
               if(d>F.R*3) continue;
               const k=(1-d/(F.R*3))**2*P.lamp;
               if(k<.06) continue;
-              bucket[Math.min(5,(k*6)|0)].push(e);     // cold, always
+              /* a draw record, not the graph edge: the grid index holds {a,b} */
+              bucket[Math.min(LEVELS-1,(k*LEVELS)|0)].push(
+                {ax:e.a.x, ay:e.a.y, bx:e.b.x, by:e.b.y, ka:k, kb:k});   // cold, always
             }
           }
         }
@@ -596,7 +607,22 @@
           ctx.beginPath();
           for(const e of arr){ ctx.moveTo(e.ax,e.ay); ctx.lineTo(e.bx,e.by); }
           ctx.strokeStyle=TUBE[ci][b]; ctx.lineWidth=P.seam[0]; ctx.stroke();
-          ctx.strokeStyle=CORE[ci][b]; ctx.lineWidth=P.seam[1]; ctx.stroke();
+          if(P.interp&&smoothOn){
+            /* the core ramps along each seam instead of being flat across it, so
+               there is no step at the vertices either. One gradient per lit edge
+               is the price; the tube above stays batched and flat. */
+            const lut=CORE_K[ci], n=LEVELS-1;
+            ctx.lineWidth=P.seam[1];
+            for(const e of arr){
+              const g=ctx.createLinearGradient(e.ax,e.ay,e.bx,e.by);
+              g.addColorStop(0,lut[(e.ka*n)|0]);
+              g.addColorStop(1,lut[(e.kb*n)|0]);
+              ctx.beginPath(); ctx.moveTo(e.ax,e.ay); ctx.lineTo(e.bx,e.by);
+              ctx.strokeStyle=g; ctx.stroke();
+            }
+          } else {
+            ctx.strokeStyle=CORE[ci][b]; ctx.lineWidth=P.seam[1]; ctx.stroke();
+          }
         }
       }
       ctx.globalCompositeOperation='source-over';
@@ -613,11 +639,15 @@
        plate would be darkened twice and the current dimmed with it */
     if(inHero) hero.classList.add('is-live');
   }
-  let avgDelta=16.7, lastRaf=0;
+  let avgDelta=16.7, lastRaf=0, smoothOn=false;
   function loop(now){
     raf=requestAnimationFrame(loop);
     const d=now-lastRaf; lastRaf=now;
     if(d>0&&d<100) avgDelta=avgDelta*.92+d*.08;        // ignore tab-switch spikes
+    /* per-seam interpolation costs a gradient per lit edge, so it is only used
+       while the renderer is keeping up; the latch has hysteresis to stop flapping */
+    if(!smoothOn&&avgDelta<18) smoothOn=true;
+    else if(smoothOn&&avgDelta>21) smoothOn=false;
     if(!running||!visible) return;
     /* Draw on every refresh when the machine keeps up, and every second one when
        it does not. A steady 30 on a 60Hz panel reads as judder on thin bright
