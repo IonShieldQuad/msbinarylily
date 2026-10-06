@@ -88,7 +88,7 @@
     hotCost:1.1, noise:.45,
     spread:64, rise:420, hold:140, fade:1750,
     speed:[560,900], runs:3, gap:[.6,1.8],
-    relightDiv:16,                                     // re-shade 1/N of the plate per frame
+    relightDiv:16,                                     // re-shade 1/N of the plate per frame (0 = never)
     maxDpr:1,                                          // CSS pixels: the plate is soft anyway
     astarBudget:260,                                   // node expansions per frame while routing
     haze:10,                                           // px width of the wavefront bloom (0 disables it)
@@ -527,7 +527,8 @@
       const busy=performance.now()-lastScroll<220;
       ctx.clearRect(0,0,S.W,S.H);
       ctx.drawImage(F.plate,0,0,S.W,S.H);            // one blit; the scrim is baked in
-      if(!busy) F.relight(lightAt(t), Math.ceil(F.tiles.length/(small?16:P.relightDiv)));
+      const div=small?16:P.relightDiv;
+      if(!busy&&div>0) F.relight(lightAt(t), Math.ceil(F.tiles.length/div));
 
       nextRun-=dt;
       if(pending){
