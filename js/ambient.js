@@ -370,6 +370,32 @@
   function makeEngine(){
     const F=buildPlate();
     const G=buildGraph(F);
+    /* The copy needs a dark ground on its left flank, but the current must not be
+       dimmed along with the plate — so the scrim is painted into the plate layer,
+       under the seams, and the CSS scrim steps aside while the canvas is live.
+       Same geometry as the CSS gradient, so ?static and live agree. */
+    const scrim=(()=>{
+      if(S.W<900){
+        const g=ctx.createLinearGradient(0,0,0,S.H);
+        g.addColorStop(0,'rgba(11,12,16,.62)'); g.addColorStop(1,'rgba(11,12,16,.82)');
+        return g;
+      }
+      const a=100*Math.PI/180;                                    // css 100deg
+      const L=Math.abs(S.W*Math.sin(a))+Math.abs(S.H*Math.cos(a));
+      const dx=Math.sin(a), dy=-Math.cos(a);
+      const x0=S.W*.5-dx*L*.5, y0=S.H*.5-dy*L*.5;
+      const g=ctx.createLinearGradient(x0,y0,x0+dx*L,y0+dy*L);
+      /* mirrors the .hero::after profile in css/main.css stop for stop, so the
+         live scrim matches what ?static shows (and what was contrast-measured) */
+      g.addColorStop(0,'rgba(11,12,16,.95)');
+      g.addColorStop(.30,'rgba(11,12,16,.88)');
+      g.addColorStop(.46,'rgba(11,12,16,.72)');
+      g.addColorStop(.64,'rgba(11,12,16,.34)');
+      g.addColorStop(.80,'rgba(11,12,16,.08)');
+      g.addColorStop(.90,'rgba(11,12,16,0)');
+      g.addColorStop(1,'rgba(11,12,16,0)');
+      return g;
+    })();
     let runs=[], nextRun=0.6, t=0;
     const small=S.W<700;
 
@@ -436,6 +462,8 @@
       ctx.clearRect(0,0,S.W,S.H);
       ctx.drawImage(F.plate,0,0,S.W,S.H);
       ctx.drawImage(F.field,0,0,S.W,S.H);
+      ctx.fillStyle=scrim;                    // darkens the plate, not the current
+      ctx.fillRect(0,0,S.W,S.H);
       /* global illumination: a slice of the plate is re-shaded against the
          drifting light every frame, so the pyramids themselves shift */
       F.relight(lightAt(t), Math.ceil(F.tiles.length/(small?16:10)));
@@ -506,9 +534,13 @@
     return {frame,press(x,y){ const r=makeRun({x,y}); if(r) runs.push(r); }};
   }
 
+  const inHero=!!canvas.closest('.hero');
   function boot(){
     stage();
     engine=makeEngine();
+    /* the canvas paints its own scrim now, so the CSS one must step aside or the
+       plate would be darkened twice and the current dimmed with it */
+    if(inHero) hero.classList.add('is-live');
   }
   function loop(now){
     raf=requestAnimationFrame(loop);
@@ -528,7 +560,7 @@
     clearTimeout(rz); rz=setTimeout(boot,260);         // rebuild the plate at the new size
   },{passive:true});
   reduced.addEventListener('change',e=>{
-    if(e.matches){ cancelAnimationFrame(raf); canvas.remove(); }
+    if(e.matches){ cancelAnimationFrame(raf); canvas.remove(); hero.classList.remove('is-live'); }
   });
 
   boot();

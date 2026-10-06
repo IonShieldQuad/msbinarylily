@@ -341,6 +341,9 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
     background: linear-gradient(180deg, rgba(11, 12, 16, 0.62) 0%, rgba(11, 12, 16, 0.82) 100%);
   }
 }
+/* while the ambience is live it paints the same scrim into its plate layer,
+   under the seams — so the current stays bright instead of being dimmed too */
+.hero.is-live::after { background: none; }
 .hero-fallback {
   position: absolute; inset: 0;
   background:
