@@ -41,14 +41,26 @@
   const SEAM_COLS=[COLD,HOT,VIOLET];                 // the two poles, violet between
   const BASE_AMB=[6,7,9], BASE_LIT=[148,153,162];    // the plate stays greyscale
   const PALE=24;
-/* brightness bands across a lit seam. More bands = a smoother gradient with the
-   same raster cost (each edge still lands in exactly one), so this is nearly
-   free smoothness — at 6 the ramp stepped visibly as the front swept */
-const BANDS=10;
+  /* Brightness levels along a lit seam. Each edge lands in exactly one level, so
+     the levels are batched and the raster cost barely moves with their count: at
+     64 the ramp is continuous to the eye in both space (along the corridor) and
+     time (as the front sweeps), which is what 6 and then 10 levels still stepped
+     through. */
+  const LEVELS=64;
   const rgb=(c,a)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
   const mix=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
   const clamp=(v,a,b)=>v<a?a:v>b?b:v;
   const smoothstep=t=>{ t=clamp(t,0,1); return t*t*(3-2*t); };
+
+  /* the level alphas, built once at load: no colour string is allocated per frame */
+  const LEV_K=[];
+  for(let b=0;b<LEVELS;b++) LEV_K.push(.08+.92*smoothstep((b+.5)/LEVELS));
+  const TUBE=[], CORE=[];
+  for(const c of SEAM_COLS){
+    const cc=mix(c,WHITE,.30);
+    TUBE.push(LEV_K.map(k=>rgb(c,.44*k)));
+    CORE.push(LEV_K.map(k=>rgb(cc,.90*k)));
+  }
 
   /* the key light drifts on two out-of-phase cycles: azimuth ±24° over ~40s,
      elevation over ~55s. You notice it over half a minute, never as motion. */
@@ -530,7 +542,7 @@ const BANDS=10;
       }
 
       const bucket=[];
-      for(let i=0;i<3*BANDS;i++) bucket.push([]);
+      for(let i=0;i<3*LEVELS;i++) bucket.push([]);
       for(let i=runs.length-1;i>=0;i--){
         const r=runs[i];
         r.front+=r.speed*dt;
@@ -538,9 +550,9 @@ const BANDS=10;
         for(const e of r.es){
           if(e.d<tailAt||e.d>r.front) continue;
           const k=energy(r.front-e.d);
-          if(k<=.10) continue;                         // the far tail is invisible
+          if(k<=.02) continue;                         // the far tail is invisible
           if(busy&&k<.45) continue;                    // mid-scroll: only the bright half
-          bucket[r.col*BANDS+Math.min(BANDS-1,(k*BANDS)|0)].push(e);
+          bucket[r.col*LEVELS+Math.min(LEVELS-1,(k*LEVELS)|0)].push(e);
         }
         if(r.front>r.maxD+P.hold+P.fade+40) runs.splice(i,1);
       }
@@ -569,23 +581,22 @@ const BANDS=10;
       ctx.globalCompositeOperation='lighter';
       ctx.lineCap='round';
       /* one soft haze under the bright half of every run */
-      /* the soft bloom goes under the wavefront only — the leading band, which is
-         the part she asked to glow — instead of the whole bright half, which was
-         the single most expensive pass in the frame */
+      /* the soft bloom goes under the wavefront only — the leading level, which is
+         the part she asked to stay crisp — instead of the whole bright half, which
+         was the single most expensive pass in the frame */
       ctx.beginPath(); let any=false;
-      for(let ci=0;ci<3;ci++) for(const e of bucket[ci*BANDS+BANDS-1]){
+      for(let ci=0;ci<3;ci++) for(const e of bucket[ci*LEVELS+LEVELS-1]){
         ctx.moveTo(e.ax,e.ay); ctx.lineTo(e.bx,e.by); any=true;
       }
       if(any&&!small&&!busy&&P.haze>0){ ctx.strokeStyle=rgb(mix(SEAM_COLS[0],WHITE,.25),.06); ctx.lineWidth=P.haze; ctx.stroke(); }
       for(let ci=0;ci<3;ci++){
-        for(let b=0;b<BANDS;b++){
-          const arr=bucket[ci*BANDS+b];
+        for(let b=0;b<LEVELS;b++){
+          const arr=bucket[ci*LEVELS+b];
           if(!arr.length) continue;
-          const k=.08+.92*smoothstep((b+.5)/BANDS);
           ctx.beginPath();
           for(const e of arr){ ctx.moveTo(e.ax,e.ay); ctx.lineTo(e.bx,e.by); }
-          ctx.strokeStyle=rgb(SEAM_COLS[ci],.44*k); ctx.lineWidth=P.seam[0]; ctx.stroke();
-          ctx.strokeStyle=rgb(mix(SEAM_COLS[ci],WHITE,.30),.90*k); ctx.lineWidth=P.seam[1]; ctx.stroke();
+          ctx.strokeStyle=TUBE[ci][b]; ctx.lineWidth=P.seam[0]; ctx.stroke();
+          ctx.strokeStyle=CORE[ci][b]; ctx.lineWidth=P.seam[1]; ctx.stroke();
         }
       }
       ctx.globalCompositeOperation='source-over';
