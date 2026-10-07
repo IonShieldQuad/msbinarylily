@@ -121,6 +121,12 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
           box: svg.getAttribute('viewBox'),
         };
       })(),
+      palette: (() => {
+        const cs = getComputedStyle(document.documentElement);
+        const v = (k) => (cs.getPropertyValue(k) || '').trim();
+        return { accent: v('--accent'), bright: v('--accent-bright'), ink: v('--accent-ink'),
+                 hot: v('--hot'), hotInk: v('--hot-ink'), holo: v('--hologlow') };
+      })(),
       ambience: null,
       cyrillic: (() => {
         const txt = document.querySelector('#case-root')?.textContent || '';
@@ -184,15 +190,15 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         const pairs = [
           ['.case-head .lede', 'var(--text-on-dark-dim)', 'var(--carbon)'],
           ['.case-head .chip', 'var(--text-on-dark-dim)', 'var(--carbon)'],
-          ['.case-head .kicker', 'var(--neon-cyan)', 'var(--carbon)'],
-          ['.section-carbon .kicker', 'var(--neon-cyan)', 'var(--carbon)'],
+          ['.case-head .kicker', 'var(--accent-bright)', 'var(--carbon)'],
+          ['.section-carbon .kicker', 'var(--accent-bright)', 'var(--carbon)'],
           ['.holo.ring .footer-meta', 'var(--text-on-dark-dim)', 'var(--line-dark)'],
           ['.holo.ring .chip:not(.chip-neon)', 'var(--text-on-dark-dim)', 'var(--line-dark)'],
           ['.lab-controls button:not([aria-pressed="true"]):not([data-act])', 'var(--ink-dim)', 'var(--panel)'],
-          ['.card-flag', 'var(--neon-ink)', 'var(--line)'],
-          ['.chip-neon[data-filter]', 'var(--neon-ink)', 'var(--panel)'],
-          ['.holo.ring .chip-neon', 'var(--neon-cyan)', 'var(--line-dark)'],
-          ['.section-carbon .chip-neon', 'var(--neon-cyan)', 'var(--carbon)'],
+          ['.card-flag', 'var(--hot-ink)', 'var(--line)'],
+          ['.chip-neon[data-filter]', 'var(--accent-ink)', 'var(--panel)'],
+          ['.holo.ring .chip-neon', 'var(--accent-bright)', 'var(--line-dark)'],
+          ['.section-carbon .chip-neon', 'var(--accent-bright)', 'var(--carbon)'],
           ['.lab-badge', 'var(--text-on-dark-dim)', 'var(--carbon)'],
         ];
         const out = [];
@@ -461,6 +467,16 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     const f = r.facts;
     if (EXPECTED_ICONS.some((x) => !f.icons.includes(x))) failures.push(`${r.name}: icon links ${j(f.icons)}`);
     if (f.themeColor !== '#0b0c10') failures.push(`${r.name}: theme-color ${j(f.themeColor)}`);
+    // one blue family and one red, and the blue-purple hologlow may not come back
+    if (f.palette.accent !== '#2f7bff' || f.palette.hot !== '#ff3d5e') {
+      failures.push(`${r.name}: palette drifted — accent ${j(f.palette.accent)}, hot ${j(f.palette.hot)}`);
+    }
+    if (/00e5ff|7c4dff|cyan|violet/i.test(f.palette.holo)) {
+      failures.push(`${r.name}: the accent gradient carries a hue other than blue — ${j(f.palette.holo)}`);
+    }
+    if (/00e5ff|7c4dff/i.test(f.palette.ink + f.palette.hotInk)) {
+      failures.push(`${r.name}: an ink token still holds a cyan/violet literal`);
+    }
     if (!f.brandMark) failures.push(`${r.name}: no header mark`);
     else {
       if (f.brandMark.carriesOldCyan) failures.push(`${r.name}: the header mark still carries the old cyan`);
