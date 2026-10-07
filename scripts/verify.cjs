@@ -468,7 +468,7 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (EXPECTED_ICONS.some((x) => !f.icons.includes(x))) failures.push(`${r.name}: icon links ${j(f.icons)}`);
     if (f.themeColor !== '#0b0c10') failures.push(`${r.name}: theme-color ${j(f.themeColor)}`);
     // one blue family and one red, and the blue-purple hologlow may not come back
-    if (f.palette.accent !== '#2f7bff' || f.palette.hot !== '#ff3d5e') {
+    if (f.palette.accent !== '#2f9bff' || f.palette.hot !== '#ff3d5e') {
       failures.push(`${r.name}: palette drifted — accent ${j(f.palette.accent)}, hot ${j(f.palette.hot)}`);
     }
     if (/00e5ff|7c4dff|cyan|violet/i.test(f.palette.holo)) {
@@ -480,7 +480,7 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (!f.brandMark) failures.push(`${r.name}: no header mark`);
     else {
       if (f.brandMark.carriesOldCyan) failures.push(`${r.name}: the header mark still carries the old cyan`);
-      if (!f.brandMark.colours.includes('#2f7bff') || !f.brandMark.colours.includes('#ff3d5e')) {
+      if (!f.brandMark.colours.includes('#2f9bff') || !f.brandMark.colours.includes('#ff3d5e')) {
         failures.push(`${r.name}: header mark colours ${j(f.brandMark.colours)}`);
       }
       if (f.brandMark.box !== '0 0 24 24') failures.push(`${r.name}: header mark viewBox ${j(f.brandMark.box)}`);

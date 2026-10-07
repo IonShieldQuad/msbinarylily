@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-labelledby="emblem-title">
-  <title id="emblem-title">Ms Binary Lily — four lit sides of a hexagon, the top and bottom left open</title>
-  <!-- Flat-top hexagon, circumradius 8.4 about (12,12). Only the four diagonal sides are
-       drawn: red ff3d5e sweeps the two left sides and meets at the left vertex, blue
-       2f7bff the two right sides and meets at the right vertex; the top and bottom sides
-       are absent, and that opening is the neutral space between the poles. Each arm is
-       3.6 wide where the two of a colour join (round cap, r 1.8) and tapers to a point at
-       the far corner, so the pair reads as rotating. The core stays neutral (#c2ccdb) so
-       it survives a dark tab bar. Geometry is generated in shots/mark-lab.html — the
-       numbers here are its output, so re-run the lab before editing them by hand. -->
-  <g fill="#ff3d5e"><path d="M2.04 11.1 L7.8 4.73 L5.16 12.9 Z"/><path d="M2.04 12.9 L7.8 19.27 L5.16 11.1 Z"/><circle cx="3.6" cy="12" r="1.8"/></g><g fill="#2f7bff"><path d="M21.96 11.1 L16.2 4.73 L18.84 12.9 Z"/><path d="M21.96 12.9 L16.2 19.27 L18.84 11.1 Z"/><circle cx="20.4" cy="12" r="1.8"/></g><circle cx="12" cy="12" r="2.2" fill="#c2ccdb"/>
+  <title id="emblem-title">Ms Binary Lily — two particles chasing each other round a hexagonal orbit</title>
+  <!-- Flat-top hexagon, circumradius 8.4 about (12,12). A bead sits at the right vertex and at
+       the left one, each trailing a band that runs backwards along two edges and tapers to a
+       point: the blue one over the upper-right edges, the red over the lower-left. Both travel
+       the SAME way round, so the pair is rotationally symmetric (180°) rather than mirrored —
+       mirrored tails are what made the previous four-edge version read as brackets. The neutral
+       core (r 1.7) marks the barycentre they orbit and is what carries the mark at 16px.
+       Geometry is generated in shots/orbit-lab.html (head bead 2.7, trail half-widths
+       2.1 / 1.5 / 0.25); the numbers here are that script's output. -->
+  <path d="M22.22 10.95 L16.95 3.43 L7.8 4.48 L7.8 4.98 L15.45 6.02 L18.58 13.05 Z" fill="#2f9bff"/><circle cx="20.4" cy="12" r="2.7" fill="#2f9bff"/><path d="M1.78 13.05 L7.05 20.57 L16.2 19.52 L16.2 19.02 L8.55 17.98 L5.42 10.95 Z" fill="#ff3d5e"/><circle cx="3.6" cy="12" r="2.7" fill="#ff3d5e"/><circle cx="12" cy="12" r="1.7" fill="#c2ccdb"/>
 </svg>
