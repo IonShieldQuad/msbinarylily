@@ -124,8 +124,21 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       palette: (() => {
         const cs = getComputedStyle(document.documentElement);
         const v = (k) => (cs.getPropertyValue(k) || '').trim();
+        // the gradient is specified as cyan → blue, so the hue of each stop is the check
+        const hueOf = (hex) => {
+          const h = hex.replace('#', '');
+          const c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+          const mx = Math.max(...c), mn = Math.min(...c), d = mx - mn;
+          if (!d) return 0;
+          const hh = mx === c[0] ? 60 * (((c[1] - c[2]) / d) % 6)
+                   : mx === c[1] ? 60 * ((c[2] - c[0]) / d + 2)
+                   : 60 * ((c[0] - c[1]) / d + 4);
+          return Math.round((hh + 360) % 360);
+        };
+        const holo = v('--hologlow');
         return { accent: v('--accent'), bright: v('--accent-bright'), ink: v('--accent-ink'),
-                 hot: v('--hot'), hotInk: v('--hot-ink'), holo: v('--hologlow') };
+                 hot: v('--hot'), hotInk: v('--hot-ink'), holo,
+                 holoStops: (holo.match(/#[0-9a-f]{6}/gi) || []).map((x) => ({ hex: x.toLowerCase(), hue: hueOf(x) })) };
       })(),
       ambience: null,
       cyrillic: (() => {
@@ -468,11 +481,16 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (EXPECTED_ICONS.some((x) => !f.icons.includes(x))) failures.push(`${r.name}: icon links ${j(f.icons)}`);
     if (f.themeColor !== '#0b0c10') failures.push(`${r.name}: theme-color ${j(f.themeColor)}`);
     // one blue family and one red, and the blue-purple hologlow may not come back
-    if (f.palette.accent !== '#2f9bff' || f.palette.hot !== '#ff3d5e') {
+    if (f.palette.accent !== '#2fb8ff' || f.palette.hot !== '#ff7059') {
       failures.push(`${r.name}: palette drifted — accent ${j(f.palette.accent)}, hot ${j(f.palette.hot)}`);
     }
-    if (/00e5ff|7c4dff|cyan|violet/i.test(f.palette.holo)) {
-      failures.push(`${r.name}: the accent gradient carries a hue other than blue — ${j(f.palette.holo)}`);
+    const stops = f.palette.holoStops;
+    if (stops.length < 2) failures.push(`${r.name}: the accent gradient has fewer than two colour stops`);
+    else {
+      if (stops.some((x) => x.hue > 232)) failures.push(`${r.name}: a gradient stop drifts violet — ${j(stops)}`);
+      if (!(stops[0].hue <= 196 && stops[stops.length - 1].hue >= 206)) {
+        failures.push(`${r.name}: the accent gradient is not cyan→blue — ${j(stops)}`);
+      }
     }
     if (/00e5ff|7c4dff/i.test(f.palette.ink + f.palette.hotInk)) {
       failures.push(`${r.name}: an ink token still holds a cyan/violet literal`);
@@ -480,7 +498,7 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (!f.brandMark) failures.push(`${r.name}: no header mark`);
     else {
       if (f.brandMark.carriesOldCyan) failures.push(`${r.name}: the header mark still carries the old cyan`);
-      if (!f.brandMark.colours.includes('#2f9bff') || !f.brandMark.colours.includes('#ff3d5e')) {
+      if (!f.brandMark.colours.includes('#2fb8ff') || !f.brandMark.colours.includes('#ff7059')) {
         failures.push(`${r.name}: header mark colours ${j(f.brandMark.colours)}`);
       }
       if (f.brandMark.box !== '0 0 24 24') failures.push(`${r.name}: header mark viewBox ${j(f.brandMark.box)}`);

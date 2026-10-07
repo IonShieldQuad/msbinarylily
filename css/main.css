@@ -21,27 +21,35 @@
      had no meaning anywhere on the page. Measured, so each surface takes the step
      that clears 4.5:1 on it: #2f7bff is 5.02:1 on --carbon but only 3.45:1 on
      --line-dark and 3.62:1 on --panel, so small text never uses it directly. */
-  --accent: #2f9bff;          /* one blue, tuned cyan-ward of the engine's pole (hue 209° vs 218°):
-                                 crisper next to the red, and closer to the artwork's own blue */
-  --accent-bright: #5baeff;   /* small text on the DARK surfaces (8.32:1 carbon, 5.71:1 line-dark) */
-  --accent-ink: #0b5cc0;      /* small text on the LIGHT surfaces (5.92:1 panel, 4.83:1 line) */
-  --accent-deep: #1a86ff;     /* the far end of a gradient, and hover */
-  --accent-soft: rgba(47, 155, 255, 0.16);
+  --accent: #2fb8ff;          /* one blue, tuned cyan-ward: hue 200°, against the plate pole's 218°
+                                 and inside the hero artwork's own 180–210° band */
+  --accent-bright: #7cc8ff;   /* small text on the DARK surfaces (10.76:1 carbon, 7.38:1 line-dark) */
+  --accent-ink: #0b64a8;      /* small text on the LIGHT surfaces (5.75:1 panel, 4.70:1 line) —
+                                 this is the darkest the cyan side can go and still clear --line */
+  --accent-deep: #1f7cff;     /* the blue end of the gradient, and hover (5.01:1 on carbon) */
+  --accent-soft: rgba(47, 184, 255, 0.16);
 
   /* secondary: the hot pole, and nothing else. It is the error colour, so it appears
      only where something IS wrong or needs attention. Never as a neighbour of the
      accent — the two sit within 1.13:1 of each other in luminance, so a shared edge
      vibrates rather than separates; they belong in different elements. */
-  --hot: #ff3d5e;             /* on dark surfaces (5.66:1 on carbon) */
-  --hot-ink: #b01033;         /* red as text on a light surface (6.59:1 panel, 5.38:1 line) */
-  --hot-soft: rgba(255, 61, 94, 0.12);
+  --hot: #ff7059;             /* on dark surfaces (7.18:1 on carbon). Hue 8° rather than 350°
+                                 and saturation 65% rather than 76%, so it reads as a glow
+                                 instead of a warning lamp */
+  --hot-ink: #b83024;         /* the same warm hue as text on a light surface (5.61:1 panel, 4.58:1 line) */
+  --hot-soft: rgba(255, 112, 89, 0.12);
 
   /* kept as aliases so every existing rule keeps working while the names migrate */
   --neon-cyan: var(--accent);
   --neon-violet: var(--accent-deep);
   --neon-soft: var(--accent-soft);
   --neon-ink: var(--accent-ink);
-  --hologlow: linear-gradient(135deg, var(--accent-bright) 0%, var(--accent) 52%, var(--accent-deep) 100%);
+  /* the accent gradient sweeps cyan → blue on purpose: a stop of pure cyan at one
+     end and a blue at the other, passing through the accent. Used as clipped text on
+     the dark surfaces (wordmark, .holo-text), so every stop clears 4.5:1 on carbon —
+     12.7:1 at the cyan end, 5.01:1 at the blue end. */
+  --holo-cyan: #2ce4ff;
+  --hologlow: linear-gradient(135deg, var(--holo-cyan) 0%, var(--accent) 48%, var(--accent-deep) 100%);
 
   /* binary duality: a cold pole and a hot pole, meeting at violet.
      Used as an accent language (wordmark, ambience, emblem) — not as UI paint. */
@@ -50,7 +58,7 @@
   --binary: linear-gradient(90deg, #1f5dff 0%, #7c4dff 46%, #ff2e4d 100%);
   /* deliberately unused as a surface wash — the poles show up in the board's
      energy and nowhere else; kept as tokens so the motif stays documented */
-  --binary-soft: linear-gradient(90deg, rgba(26, 134, 255, 0.10) 0%, rgba(26, 134, 255, 0.08) 50%, rgba(255, 46, 77, 0.10) 100%);
+  --binary-soft: linear-gradient(90deg, rgba(31, 156, 255, 0.10) 0%, rgba(31, 156, 255, 0.08) 50%, rgba(255, 46, 77, 0.10) 100%);
 
   /* type */
   --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
@@ -225,14 +233,14 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
   color: #04121a;
   font-weight: 500;
 }
-.btn-primary:hover { filter: drop-shadow(0 0 16px rgba(47, 155, 255, 0.42)); }
+.btn-primary:hover { filter: drop-shadow(0 0 16px rgba(47, 184, 255, 0.42)); }
 .hero .btn, .section-carbon .btn {
   --btn-fg: var(--text-on-dark);
   --ring-color: var(--text-on-dark);
   --ring-surface: var(--carbon);   /* the button plate sits on the carbon surface */
 }
 /* the primary keeps its gradient plate and dark label on dark surfaces too */
-.hero .btn { --ring-color: rgba(47, 155, 255, 0.5); }   /* ghost stays on-palette */
+.hero .btn { --ring-color: rgba(47, 184, 255, 0.5); }   /* ghost stays on-palette */
 .hero .btn-primary, .section-carbon .btn-primary {
   --ring-color: rgba(255, 255, 255, 0.38);
   --ring-surface: linear-gradient(180deg, var(--accent-bright) 0%, var(--accent) 100%);
@@ -290,8 +298,8 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
   padding: 0.55rem 0.7rem;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
-.nav a:hover { color: var(--text-on-dark); background: rgba(47, 155, 255, 0.1); }
-.nav a[aria-current="page"] { color: var(--accent-bright); background: rgba(47, 155, 255, 0.12); }
+.nav a:hover { color: var(--text-on-dark); background: rgba(47, 184, 255, 0.1); }
+.nav a[aria-current="page"] { color: var(--accent-bright); background: rgba(47, 184, 255, 0.12); }
 
 /* the language switch: a plain 1px border is cut off along the clip-path chamfers,
    so the frame is a clipped fill inset by 1px of padding instead — complete rim on
@@ -371,12 +379,12 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
     /* greeble grid: fine rules + a coarser cell so the backdrop reads as structure */
     /* a black board, not a colour field: faint structure plus two very quiet
        glows. Colour belongs to the energy, not to the ground. */
-    repeating-linear-gradient(to right, rgba(47, 155, 255, 0.05) 0 1px, transparent 1px 96px),
-    repeating-linear-gradient(to bottom, rgba(47, 155, 255, 0.05) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(to right, rgba(47, 184, 255, 0.05) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(to bottom, rgba(47, 184, 255, 0.05) 0 1px, transparent 1px 96px),
     repeating-linear-gradient(to right, rgba(226, 238, 248, 0.014) 0 1px, transparent 1px 24px),
     linear-gradient(180deg, #0b0c10 0%, #0d0f15 55%, #0b0c10 100%),
-    radial-gradient(38% 46% at 82% 16%, rgba(26, 134, 255, 0.10), transparent 72%),
-    radial-gradient(40% 48% at 8% 88%, rgba(47, 155, 255, 0.07), transparent 74%);
+    radial-gradient(38% 46% at 82% 16%, rgba(31, 156, 255, 0.10), transparent 72%),
+    radial-gradient(40% 48% at 8% 88%, rgba(47, 184, 255, 0.07), transparent 74%);
   opacity: 1;
 }
 .hero > .wrap { position: relative; z-index: 1; }
@@ -430,7 +438,7 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 .hero-logo {
   position: relative; width: 100%; height: auto; opacity: 0.99;
   filter: brightness(1.07) contrast(1.05) saturate(1.06)
-          drop-shadow(0 0 14px rgba(47, 155, 255, 0.38)) drop-shadow(0 0 34px rgba(255, 61, 94, 0.20));
+          drop-shadow(0 0 14px rgba(47, 184, 255, 0.38)) drop-shadow(0 0 34px rgba(255, 61, 94, 0.20));
 }
 @media (min-width: 900px) {
   .hero-visual { justify-self: end; width: min(520px, 41vw); }
@@ -495,7 +503,7 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
   --ring-color: var(--line-dark);
   --ring-surface:
     repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 4px),
-    linear-gradient(150deg, rgba(26, 134, 255, 0.16), rgba(47, 155, 255, 0.08));
+    linear-gradient(150deg, rgba(31, 156, 255, 0.16), rgba(47, 184, 255, 0.08));
   position: relative;
   padding: clamp(1.1rem, 3vw, 1.8rem);
   backdrop-filter: blur(6px);
@@ -522,7 +530,7 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 .prose li { margin-bottom: 0.35rem; }
 .prose code {
   font-family: var(--font-mono); font-size: 0.86em;
-  background: rgba(47, 155, 255, 0.1); padding: 0.1em 0.35em;
+  background: rgba(47, 184, 255, 0.1); padding: 0.1em 0.35em;
 }
 .prose h4 { font-family: var(--font-display); margin: 1.4rem 0 0.5rem; }
 
@@ -564,7 +572,7 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 }
 .notice {
   font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em;
-  border-left: 2px solid var(--accent); background: rgba(47, 155, 255, 0.06);
+  border-left: 2px solid var(--accent); background: rgba(47, 184, 255, 0.06);
   padding: 0.55rem 0.8rem; margin: 0 0 1.2rem;
 }
 /* The lead form has always set note.dataset.kind ('error' | 'ok' | 'info') and no rule
