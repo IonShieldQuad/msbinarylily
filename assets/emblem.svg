@@ -1,8 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-labelledby="emblem-title">
-  <title id="emblem-title">Ms Binary Lily — a two-pole current running the hexagon's edges</title>
-  <!-- The vortex: two arms laid along hexagon edges, never touching, one neutral gap at
-       each pole and a neutral core between them. Blue and red are the engine's own poles
-       (2f7bff / ff3d5e), so the mark and the live current share one palette. The 0.9 scale
-       keeps the 3.4-wide strokes inside the 24 box: the drawn content is centred on (12,12). -->
-  <g transform="translate(12 12) scale(.9) translate(-12 -12)" fill="none" stroke-width="3.4" stroke-linejoin="round"><path d="M13.35 2.41 21 7v10l-7.65 4.59" stroke="#2f7bff"/><path d="M10.65 21.59 3 17V7l7.65-4.59" stroke="#ff3d5e"/></g><circle cx="12" cy="12" r="2.2" fill="#c2ccdb"/>
+  <title id="emblem-title">Ms Binary Lily — four lit sides of a hexagon, the top and bottom left open</title>
+  <!-- Flat-top hexagon, circumradius 8.4 about (12,12). Only the four diagonal sides are
+       drawn: red ff3d5e sweeps the two left sides and meets at the left vertex, blue
+       2f7bff the two right sides and meets at the right vertex; the top and bottom sides
+       are absent, and that opening is the neutral space between the poles. Each arm is
+       3.6 wide where the two of a colour join (round cap, r 1.8) and tapers to a point at
+       the far corner, so the pair reads as rotating. The core stays neutral (#c2ccdb) so
+       it survives a dark tab bar. Geometry is generated in shots/mark-lab.html — the
+       numbers here are its output, so re-run the lab before editing them by hand. -->
+  <g fill="#ff3d5e"><path d="M2.04 11.1 L7.8 4.73 L5.16 12.9 Z"/><path d="M2.04 12.9 L7.8 19.27 L5.16 11.1 Z"/><circle cx="3.6" cy="12" r="1.8"/></g><g fill="#2f7bff"><path d="M21.96 11.1 L16.2 4.73 L18.84 12.9 Z"/><path d="M21.96 12.9 L16.2 19.27 L18.84 11.1 Z"/><circle cx="20.4" cy="12" r="1.8"/></g><circle cx="12" cy="12" r="2.2" fill="#c2ccdb"/>
 </svg>

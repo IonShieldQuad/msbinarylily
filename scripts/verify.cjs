@@ -110,9 +110,13 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       brandMark: (() => {
         const svg = document.querySelector('.brand svg');
         if (!svg) return null;
-        const paths = [...svg.querySelectorAll('path')];
+        // every element, not just path/circle: the poles are painted by <g fill> wrappers,
+        // so reading leaves only would report the neutral core and call the mark uncoloured
+        const shapes = [...svg.querySelectorAll('*')];
+        const colours = shapes.flatMap((x) => [x.getAttribute('stroke'), x.getAttribute('fill')])
+          .filter((c) => c && c !== 'none');
         return {
-          strokes: paths.map((x) => x.getAttribute('stroke')).filter(Boolean),
+          colours: [...new Set(colours)],
           carriesOldCyan: svg.outerHTML.includes('#00e5ff'),
           box: svg.getAttribute('viewBox'),
         };
@@ -460,8 +464,8 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (!f.brandMark) failures.push(`${r.name}: no header mark`);
     else {
       if (f.brandMark.carriesOldCyan) failures.push(`${r.name}: the header mark still carries the old cyan`);
-      if (!f.brandMark.strokes.includes('#2f7bff') || !f.brandMark.strokes.includes('#ff3d5e')) {
-        failures.push(`${r.name}: header mark strokes ${j(f.brandMark.strokes)}`);
+      if (!f.brandMark.colours.includes('#2f7bff') || !f.brandMark.colours.includes('#ff3d5e')) {
+        failures.push(`${r.name}: header mark colours ${j(f.brandMark.colours)}`);
       }
       if (f.brandMark.box !== '0 0 24 24') failures.push(`${r.name}: header mark viewBox ${j(f.brandMark.box)}`);
     }
