@@ -19,12 +19,24 @@
 
   /* ------------------------------------------------------------------ i18n -- */
 
-  function applyLang(lang) {
+  function applyLang(lang, persist) {
     state.lang = lang;
     document.documentElement.lang = lang;
     // render first, translate second: every renderer emits [data-ru]/[data-en]
     // nodes, and translating before them left that content in the source language
     renderDynamic();
+    applyStatic();
+    if (persist) {
+      try { localStorage.setItem(STORE_KEY, lang); } catch (_) { /* private mode */ }
+    }
+  }
+
+  /* The copy that lives in the markup, so it needs no manifest and can run before
+     the fetch — that is what keeps a non-RU visitor from seeing a frame of the
+     Russian source. `case.html`'s metadata is per case, so it carries no pair. */
+  function applyStatic() {
+    const lang = state.lang;
+    document.documentElement.lang = lang;
     document.querySelectorAll('[data-ru]').forEach((el) => {
       const value = lang === 'en' ? el.dataset.en || el.dataset.ru : el.dataset.ru;
       if (value == null) return;
@@ -39,7 +51,24 @@
     document.querySelectorAll('[data-lang-btn]').forEach((btn) => {
       btn.setAttribute('aria-pressed', String(btn.dataset.langBtn === lang));
     });
-    try { localStorage.setItem(STORE_KEY, lang); } catch (_) { /* private mode */ }
+    const title = lang === 'en' ? document.documentElement.dataset.titleEn : document.documentElement.dataset.titleRu;
+    if (title) document.title = title;
+    const desc = lang === 'en' ? document.documentElement.dataset.descEn : document.documentElement.dataset.descRu;
+    const meta = document.head.querySelector('meta[name="description"]');
+    if (desc && meta) meta.setAttribute('content', desc);
+  }
+
+  /* No stored choice → follow the browser. RU is the source language, so any other
+     visitor starts in English; the first tag they actually prefer wins. */
+  function detectLang() {
+    const tags = (navigator.languages && navigator.languages.length)
+      ? navigator.languages : [navigator.language || ''];
+    for (const tag of tags) {
+      const base = String(tag || '').toLowerCase().split('-')[0];
+      if (!base) continue;
+      return REQUIRED_LANG.has(base) ? base : 'en';
+    }
+    return 'ru';
   }
 
   function storedLang() {
@@ -47,7 +76,7 @@
       const saved = localStorage.getItem(STORE_KEY);
       if (REQUIRED_LANG.has(saved)) return saved;
     } catch (_) { /* ignore */ }
-    return document.documentElement.lang === 'en' ? 'en' : 'ru';
+    return detectLang();
   }
 
   const t = (pair) => {
@@ -243,6 +272,9 @@
   function renderCasePage() {
     const host = document.getElementById('case-root');
     if (!host) return;
+    // the first pass runs before the manifest lands; rendering now would paint
+    // the case-not-found state for a case that exists
+    if (!state.manifest) return;
     const id = new URLSearchParams(location.search).get('project');
     const c = caseById(id);
     const caseUrl = (cid) => `${location.href.split('?')[0]}?project=${encodeURIComponent(cid)}`;
@@ -381,12 +413,16 @@
       });
     }
     document.querySelectorAll('[data-lang-btn]').forEach((btn) => {
-      btn.addEventListener('click', () => applyLang(btn.dataset.langBtn));
+      // a click is an explicit choice, so it is the only thing worth storing
+      btn.addEventListener('click', () => applyLang(btn.dataset.langBtn, true));
     });
   }
 
   async function boot() {
     initChrome();
+    // the markup copy (and the tab title) first, before the manifest is awaited:
+    // a visitor whose browser says English must never see a frame of Russian
+    applyLang(storedLang(), false);
     try {
       state.manifest = await loadManifest();
       state.cases = state.manifest.cases || [];
@@ -395,7 +431,7 @@
       const note = document.querySelectorAll('[data-manifest-note]');
       note.forEach((el) => { el.hidden = false; });
     }
-    applyLang(storedLang());
+    applyLang(state.lang, false);
     observeReveals();
   }
 

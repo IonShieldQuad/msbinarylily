@@ -18,17 +18,21 @@ const CHROME = process.env.PW_CHROMIUM ||
 const base = (process.argv[2] || 'file:///' + ROOT.replace(/\\/g, '/')).replace(/\/$/, '');
 const url = (p) => (base.startsWith('file:') ? `${base}/${p}` : `${base}/${p}`);
 
+/* Every page is loaded with an explicit browser locale: with no stored choice the
+   site follows it, so a ru-* locale must land on RU (the source language) and any
+   other locale on EN. The last entry starts in English on purpose. */
 const pages = [
-  ['index', 'index.html', 'ru'],
-  ['projects', 'projects.html', 'ru'],
-  ['services', 'services.html', 'ru'],
-  ['about', 'about.html', 'ru'],
-  ['laboratory', 'laboratory.html', 'ru'],
-  ['lab-current-field', 'lab-current-field.html', 'ru'],
-  ['contact', 'contact.html', 'ru'],
-  ['case-tg', 'case.html?project=tg-aggregator', 'ru'],
-  ['case-missing', 'case.html?project=does-not-exist', 'ru'],
-  ['index-static', 'index.html?static', 'ru'],
+  ['index', 'index.html', 'ru-RU', 'ru'],
+  ['projects', 'projects.html', 'ru-RU', 'ru'],
+  ['services', 'services.html', 'ru-RU', 'ru'],
+  ['about', 'about.html', 'ru-RU', 'ru'],
+  ['laboratory', 'laboratory.html', 'ru-RU', 'ru'],
+  ['lab-current-field', 'lab-current-field.html', 'ru-RU', 'ru'],
+  ['contact', 'contact.html', 'ru-RU', 'ru'],
+  ['case-tg', 'case.html?project=tg-aggregator', 'ru-RU', 'ru'],
+  ['case-missing', 'case.html?project=does-not-exist', 'ru-RU', 'ru'],
+  ['index-static', 'index.html?static', 'ru-RU', 'ru'],
+  ['index-en-browser', 'index.html', 'en-US', 'en'],
 ];
 
 const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 'about.html', 'contact.html'];
@@ -38,8 +42,8 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
   const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
   const report = [];
 
-  for (const [name, rel, lang] of pages) {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  for (const [name, rel, locale, wantLang] of pages) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1, locale });
     const page = await context.newPage();
     const errors = [];
     page.on('console', (m) => { if (m.type() === 'error') errors.push(`console: ${m.text()}`); });
@@ -261,37 +265,83 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       return { reactsToPointer: after !== before, lit: before > 0 };
     });
 
-    // language toggle: RU -> EN on a page that has a hero lede
+    // the site follows the browser when nothing is stored, so an English browser
+    // must never show a frame of the Russian source on load
+    if (wantLang === 'en') {
+      facts.bodyCyrillic = await page.evaluate(() => {
+      const allow = [/^Тамбов/];
+      const out = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = walker.nextNode())) {
+        const t = n.textContent.trim();
+        if (!t || !/[а-яёА-ЯЁ]/.test(t)) continue;
+        const el = n.parentElement;
+        if (!el || !el.offsetParent || el.closest('script,style')) continue;
+        if (allow.some((re) => re.test(t))) continue;
+        out.push(t.slice(0, 40));
+      }
+      return [...new Set(out)].slice(0, 6);
+      });
+    }
+
+    // language switch: the toggle must reach the other language, and once EN is on
+    // nothing may stay in the source language
     let langFlip = null;
-    const toggle = await page.$('[data-lang-btn="en"]');
+    const target = wantLang === 'ru' ? 'en' : 'ru';
+    const toggle = await page.$(`[data-lang-btn="${target}"]`);
     if (toggle) {
-      const before = await page.evaluate(() => document.querySelector('[data-ru]')?.textContent?.trim());
+      const before = await page.evaluate(() => ({
+        title: document.title,
+        first: document.querySelector('[data-ru]')?.textContent?.trim(),
+      }));
       await toggle.click();
       await page.waitForTimeout(350);
-      const after = await page.evaluate(() => ({
+      const after = await page.evaluate((lang) => ({
         lang: document.documentElement.lang,
+        title: document.title,
         first: document.querySelector('[data-ru]')?.textContent?.trim(),
-        pressed: document.querySelector('[data-lang-btn="en"]')?.getAttribute('aria-pressed'),
-      }));
-      langFlip = { before, after: after.first, lang: after.lang, pressed: after.pressed, changed: before !== after.first };
-      // nothing may stay in the source language once EN is on (a place name or the
-      // language labels themselves are not translation leftovers)
-      langFlip.leftoverCyrillic = await page.evaluate(() => {
-        const allow = [/^Тамбов/];
-        const out = [];
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        let n;
-        while ((n = walker.nextNode())) {
-          const t = n.textContent.trim();
-          if (!t || !/[а-яёА-ЯЁ]/.test(t)) continue;
-          const el = n.parentElement;
-          if (!el || !el.offsetParent || el.closest('script,style')) continue;
-          if (allow.some((re) => re.test(t))) continue;
-          out.push(t.slice(0, 40));
-        }
-        return [...new Set(out)].slice(0, 6);
-      });
-      await page.click('[data-lang-btn="ru"]');
+        pressed: document.querySelector(`[data-lang-btn="${lang}"]`)?.getAttribute('aria-pressed'),
+        stored: localStorage.getItem('mbl-lang'),
+        // pages that declare a bilingual pair must land on exactly that string;
+        // a case page's tab title comes from the case data instead
+        wantTitle: document.documentElement.dataset[lang === 'en' ? 'titleEn' : 'titleRu'] || null,
+      }), target);
+      langFlip = {
+        target, before: before.first, after: after.first, lang: after.lang,
+        title: after.title, wantTitle: after.wantTitle, titleChanged: before.title !== after.title,
+        pressed: after.pressed, stored: after.stored, changed: before.first !== after.first,
+      };
+      if (target === 'en') {
+        // nothing may stay in the source language once EN is on (a place name or the
+        // language labels themselves are not translation leftovers)
+        langFlip.leftoverCyrillic = await page.evaluate(() => {
+      const allow = [/^Тамбов/];
+      const out = [];
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = walker.nextNode())) {
+        const t = n.textContent.trim();
+        if (!t || !/[а-яёА-ЯЁ]/.test(t)) continue;
+        const el = n.parentElement;
+        if (!el || !el.offsetParent || el.closest('script,style')) continue;
+        if (allow.some((re) => re.test(t))) continue;
+        out.push(t.slice(0, 40));
+      }
+      return [...new Set(out)].slice(0, 6);
+        });
+      }
+      if (name === 'index-en-browser') {
+        // an explicit click is remembered, and it outranks the browser locale
+        await page.reload({ waitUntil: 'load' });
+        await page.waitForTimeout(1500);
+        langFlip.sticky = await page.evaluate(() => ({
+          lang: document.documentElement.lang,
+          title: document.title,
+          stored: localStorage.getItem('mbl-lang'),
+        }));
+      }
+      await page.click(`[data-lang-btn="${wantLang}"]`);
       await page.waitForTimeout(250);
     }
 
@@ -325,7 +375,7 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       };
     });
 
-    report.push({ name, rel, errors, facts, langFlip, shot });
+    report.push({ name, rel, locale, wantLang, errors, facts, langFlip, shot });
     await context.close();
   }
 
@@ -341,6 +391,8 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
   for (const r of report) {
     const f = r.facts;
     if (r.errors.length) failures.push(`${r.name}: ${r.errors.length} error(s) — ${r.errors[0]}`);
+    if (f.lang !== r.wantLang) failures.push(`${r.name}: locale ${r.locale} loaded lang=${f.lang}, expected ${r.wantLang}`);
+    if (f.bodyCyrillic && f.bodyCyrillic.length) failures.push(`${r.name}: Cyrillic visible in a page loaded as English — ${j(f.bodyCyrillic)}`);
     if (f.h1Count !== 1) failures.push(`${r.name}: ${f.h1Count} <h1> (exactly one expected)`);
     if (f.literalMd.length) failures.push(`${r.name}: markdown markers in plain text — ${j(f.literalMd)}`);
     if (f.vocabulary.length) failures.push(`${r.name}: internal vocabulary in visible copy — ${j(f.vocabulary)}`);
@@ -365,9 +417,14 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       }
     }
     if (r.langFlip) {
-      if (!r.langFlip.changed) failures.push(`${r.name}: RU→EN toggle changed nothing`);
-      if (r.langFlip.pressed !== 'true') failures.push(`${r.name}: EN button aria-pressed=${r.langFlip.pressed}`);
-      if (r.langFlip.leftoverCyrillic.length) failures.push(`${r.name}: Cyrillic left in EN mode — ${j(r.langFlip.leftoverCyrillic)}`);
+      if (!r.langFlip.changed) failures.push(`${r.name}: ${r.langFlip.target} toggle changed nothing`);
+      if (r.langFlip.wantTitle && r.langFlip.title !== r.langFlip.wantTitle) {
+        failures.push(`${r.name}: tab title ${j(r.langFlip.title)} is not the ${r.langFlip.target} pair ${j(r.langFlip.wantTitle)}`);
+      }
+      if (r.langFlip.pressed !== 'true') failures.push(`${r.name}: ${r.langFlip.target} button aria-pressed=${r.langFlip.pressed}`);
+      if (r.langFlip.leftoverCyrillic && r.langFlip.leftoverCyrillic.length) failures.push(`${r.name}: Cyrillic left in EN mode — ${j(r.langFlip.leftoverCyrillic)}`);
+      if (r.langFlip.stored !== r.langFlip.target) failures.push(`${r.name}: clicking ${r.langFlip.target} stored ${r.langFlip.stored}`);
+      if (r.langFlip.sticky && r.langFlip.sticky.lang !== 'ru') failures.push(`${r.name}: the stored choice was ignored across a reload (lang=${r.langFlip.sticky.lang}, stored=${r.langFlip.sticky.stored})`);
     }
     if (r.name.startsWith('case-') && r.name !== 'case-missing' && f.h1 && !f.docTitle.includes(f.h1)) {
       failures.push(`${r.name}: document.title ${j(f.docTitle)} does not carry the case title`);
