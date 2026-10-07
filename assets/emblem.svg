@@ -4,5 +4,5 @@
        each pole and a neutral core between them. Blue and red are the engine's own poles
        (2f7bff / ff3d5e), so the mark and the live current share one palette. The 0.9 scale
        keeps the 3.4-wide strokes inside the 24 box: the drawn content is centred on (12,12). -->
-  <g transform="translate(12 12) scale(.9) translate(-12 -12)" fill="none" stroke-width="3.4" stroke-linejoin="round"><path d="M13.35 2.41 21 7v10l-7.65 4.59" stroke="#2f7bff"/><path d="M10.65 21.59 3 17V7l7.65-4.59" stroke="#ff3d5e"/></g><circle cx="12" cy="12" r="2.2" fill="#8fa2bb"/>
+  <g transform="translate(12 12) scale(.9) translate(-12 -12)" fill="none" stroke-width="3.4" stroke-linejoin="round"><path d="M13.35 2.41 21 7v10l-7.65 4.59" stroke="#2f7bff"/><path d="M10.65 21.59 3 17V7l7.65-4.59" stroke="#ff3d5e"/></g><circle cx="12" cy="12" r="2.2" fill="#c2ccdb"/>
 </svg>
