@@ -328,16 +328,12 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
     rgba(11, 12, 16, 0.34) 64%, rgba(11, 12, 16, 0.08) 80%, rgba(11, 12, 16, 0) 90%);
 }
 /* A scrim cannot guarantee contrast over a moving, faceted plate (measured: the
-   plate still peaks near p99 90 under the copy), so the glyphs carry their own dark
-   halo — but a TIGHT one. The old 14px/26px layers feathered 26px past every glyph
-   and read as a smudge on the plate rather than as a clean edge. One hairline offset
-   plus a narrow glow: the thick headline strokes need only the edge, the small dim
-   copy needs the wider one. */
-.hero h1 {
-  text-shadow: 0 1px 1px rgba(6, 8, 13, 0.9), 0 0 2px rgba(6, 8, 13, 0.55);
-}
-.hero .kicker, .hero .lede, .hero-stats b, .hero-stats span, .hero-cta .btn span {
-  text-shadow: 0 1px 1px rgba(6, 8, 13, 0.95), 0 0 4px rgba(6, 8, 13, 0.8);
+   plate still peaks near p99 90 under the copy), so the glyphs keep a dark edge — a
+   HARD one. Any blur reads as fog on the plate, and the old 6px/14px/26px layers
+   turned the copy into a smudge, so there is no blur radius at all: one pixel of
+   offset, recoloured to the plate's blue-black rather than to a neutral black. */
+.hero h1, .hero .kicker, .hero .lede, .hero-stats b, .hero-stats span, .hero-cta .btn span {
+  text-shadow: 0 1px 0 rgba(4, 9, 18, 0.95);
 }
 /* the gradient-clipped wordmark must not carry the halo: its glyphs are
    transparent, so a text-shadow paints a dark copy OF the word behind it and the

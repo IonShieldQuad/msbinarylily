@@ -102,6 +102,21 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         const b = document.querySelector('.btn:not(.btn-primary)');
         return b ? getComputedStyle(b, '::after').backgroundColor : null;
       })(),
+      // the icon set and the header mark are the brand surface: an SVG-only favicon
+      // leaves Safari with nothing, and the mark is blue/red (the engine's poles)
+      icons: [...document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')]
+        .map((l) => l.getAttribute('href')),
+      themeColor: document.head.querySelector('meta[name="theme-color"]')?.content || null,
+      brandMark: (() => {
+        const svg = document.querySelector('.brand svg');
+        if (!svg) return null;
+        const paths = [...svg.querySelectorAll('path')];
+        return {
+          strokes: paths.map((x) => x.getAttribute('stroke')).filter(Boolean),
+          carriesOldCyan: svg.outerHTML.includes('#00e5ff'),
+          box: svg.getAttribute('viewBox'),
+        };
+      })(),
       ambience: null,
       cyrillic: (() => {
         const txt = document.querySelector('#case-root')?.textContent || '';
@@ -431,6 +446,26 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     }
   }
   if (!navConsistent) failures.push('nav is not identical on every page');
+
+  // the icon files must exist on disk, since a 404 favicon is silent in a browser
+  for (const f of ['assets/emblem.svg', 'assets/favicon-16.png', 'assets/favicon-32.png',
+                   'assets/apple-touch-icon.png']) {
+    if (!fs.existsSync(path.join(ROOT, f))) failures.push(`missing icon file ${f}`);
+  }
+  const EXPECTED_ICONS = ['assets/emblem.svg', 'assets/favicon-32.png', 'assets/favicon-16.png', 'assets/apple-touch-icon.png'];
+  for (const r of report) {
+    const f = r.facts;
+    if (EXPECTED_ICONS.some((x) => !f.icons.includes(x))) failures.push(`${r.name}: icon links ${j(f.icons)}`);
+    if (f.themeColor !== '#0b0c10') failures.push(`${r.name}: theme-color ${j(f.themeColor)}`);
+    if (!f.brandMark) failures.push(`${r.name}: no header mark`);
+    else {
+      if (f.brandMark.carriesOldCyan) failures.push(`${r.name}: the header mark still carries the old cyan`);
+      if (!f.brandMark.strokes.includes('#2f7bff') || !f.brandMark.strokes.includes('#ff3d5e')) {
+        failures.push(`${r.name}: header mark strokes ${j(f.brandMark.strokes)}`);
+      }
+      if (f.brandMark.box !== '0 0 24 24') failures.push(`${r.name}: header mark viewBox ${j(f.brandMark.box)}`);
+    }
+  }
 
   await browser.close();
   console.log(JSON.stringify({ base, navConsistent, assertsOk: failures.length === 0, failures, report }, null, 2));
