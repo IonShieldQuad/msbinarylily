@@ -99,6 +99,23 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         const root = document.getElementById('case-root');
         return root ? [...root.querySelectorAll('a')].filter((a) => /(^|\/)contact\.html/.test(a.getAttribute('href') || '')).length : null;
       })(),
+      // the demonstrative link must be reachable from the case head, not only from
+      // the sidebar — on a 390px phone the sidebar sits ~4,900px down the page
+      caseVerify: (() => {
+        const row = document.querySelector('.case-verify');
+        if (!row) return { count: 0 };
+        const links = [...row.querySelectorAll('a')];
+        const first = links[0];
+        return {
+          count: links.length,
+          inHead: !!row.closest('.case-head'),
+          firstHref: first ? first.getAttribute('href') : null,
+          firstTarget: first ? first.getAttribute('target') : null,
+          firstRel: first ? (first.getAttribute('rel') || '') : '',
+          empty: links.filter((a) => !(a.textContent || '').trim()).length,
+          outsideDocs: links.filter((a) => !/^https?:\/\//.test(a.getAttribute('href') || '')).length,
+        };
+      })(),
       vaultWording: /в заметках хранилища|\(vault note\)/.test(document.body.innerText),
       heroCoverage: (() => {
         const hero = document.querySelector('.hero');
@@ -463,6 +480,14 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     // 360px is the width the layout promises to hold: nothing may push it sideways
     await page.setViewportSize({ width: 360, height: 800 });
     await page.waitForTimeout(350);
+    // and the case's own proof has to be inside the first phone screen, or it may
+    // as well not exist: this is where the sidebar-only placement failed
+    facts.caseVerifyMobile = await page.evaluate(() => {
+      const a = document.querySelector('.case-verify a');
+      if (!a) return null;
+      const r = a.getBoundingClientRect();
+      return { top: Math.round(r.top), bottom: Math.round(r.bottom), vh: window.innerHeight, height: Math.round(r.height) };
+    });
     facts.overflow360 = await page.evaluate(() => {
       const de = document.documentElement;
       const off = [];
@@ -509,6 +534,26 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     }
     if (f.caseCta !== null && f.caseCta === 0 && f.caseTitle && !/not found|не найден/i.test(f.caseTitle)) {
       failures.push(`${r.name}: case page has no link to contact.html`);
+    }
+    // a real case page carries its own proof in the head; a page that has no
+    // evidence at all (the missing-case state) is exempt
+    if (f.caseTitle && !/not found|не найден/i.test(f.caseTitle) && f.caseTitle && r.name.startsWith('case-')) {
+      const v = f.caseVerify || { count: 0 };
+      if (!v.count) {
+        failures.push(`${r.name}: no verify row in the case head — the evidence link is only in the sidebar`);
+      } else {
+        if (!v.inHead) failures.push(`${r.name}: verify row is outside .case-head`);
+        if (v.empty) failures.push(`${r.name}: ${v.empty} verify link(s) with no text`);
+        if (v.outsideDocs) failures.push(`${r.name}: ${v.outsideDocs} verify link(s) that are not absolute http(s) URLs — they must open off-site`);
+        if (v.firstTarget !== '_blank') failures.push(`${r.name}: verify link target=${j(v.firstTarget)} (external links open in a new tab)`);
+        if (!/noopener/.test(v.firstRel) || !/noreferrer/.test(v.firstRel)) failures.push(`${r.name}: verify link rel=${j(v.firstRel)} (needs noopener noreferrer)`);
+        const m = f.caseVerifyMobile;
+        if (!m) failures.push(`${r.name}: verify row missing at 360px`);
+        else {
+          if (m.top >= m.vh) failures.push(`${r.name}: first verify link at y=${m.top} of a ${m.vh}px phone screen — not reachable without scrolling`);
+          if (m.height < 24) failures.push(`${r.name}: verify link hit area ${m.height}px (24 minimum)`);
+        }
+      }
     }
     if (f.vaultWording) failures.push(`${r.name}: "(в заметках хранилища)"/"(vault note)" — internal storage wording on a client-facing page`);
     if (f.hero && f.hero.present) {

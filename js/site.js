@@ -343,12 +343,26 @@
       : '';
 
     const figures = c.visuals || [];
+    // the artefact that proves the case belongs in the case head: the sidebar copy
+    // of this list lands ~4,900px down a 390px phone, which reads as "no demo"
+    const verifyLinks = (c.evidence || []).filter((e) => e.url);
 
     host.innerHTML = `
       <section class="case-head">
         <div class="wrap">
           <p class="kicker">${themeLabel(c.theme)} · ${state.lang === 'en' ? 'case' : 'кейс'}</p>
           <h1>${escapeHtml(t(c.title))}</h1>
+          ${verifyLinks.length ? `
+          <p class="case-verify">
+            <span class="kicker" data-ru="проверить" data-en="verify">проверить</span>
+            ${verifyLinks.map((e) => {
+              const label = e.titled && e.label && typeof e.label === 'object' ? e.label : null;
+              const pair = label && label.ru && label.en
+                ? ` data-ru="${escapeHtml(label.ru)}" data-en="${escapeHtml(label.en)}"` : '';
+              const text = label ? t(label) : e.url.replace(/^https?:\/\//, '');
+              return `<a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer"${pair}>${escapeHtml(text)}</a>`;
+            }).join('<span class="case-verify-sep" aria-hidden="true">·</span>')}
+          </p>` : ''}
           <p class="lede">${escapeHtml(plainMd(t(c.overview).split(/\n/)[0]))}</p>
           <div class="chips">${(c.stack || []).map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('')}</div>
         </div>
