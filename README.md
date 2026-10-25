@@ -15,6 +15,8 @@ projects.html       case grid + theme filters + technical-docs block
 case.html           one template for any case: case.html?project=<id>
 about.html          bio, education, stack, values, process
 laboratory.html     experiments (deliberately not full cases)
+services.html       three turnkey packages: price, who it suits, what is excluded,
+                    what the next step is (see "Prices" below)
 contact.html        Telegram / GitHub / email + availability
 css/main.css        design system: tokens, components, responsive
 js/site.js          manifest rendering, RU/EN toggle, filters, case metadata
@@ -61,9 +63,41 @@ It also asserts, so a regression fails the run (`exit 1`) instead of only printi
 numbers: exactly one `<h1>` per state; no text below 12px; nothing pushing the page
 sideways at 360px; no source-language text left once EN is on; the case title in
 `document.title`; contrast pairs (each label must use the token of its surface and
-clear 4.5:1) plus a sweep for any visible text below the AA floor; and the ambience
-probe (reacts to the pointer on the hero, absent under `?static`). Every defect found
-in QA kept a check here.
+clear 4.5:1) plus a sweep for any visible text below the AA floor; the ambience
+probe (reacts to the pointer on the hero, absent under `?static`); and the prices —
+every `span.price-num[data-price]` on `services.html` and `index.html`, which must
+agree on each package, with no `₽` figure anywhere outside such a span. Every defect
+found in QA kept a check here.
+
+## Prices
+
+Three packages — `bot`, `automation`, `landing` — quoted as **"от X ₽" floors**, not
+a rate card: the reason is in the vault note `notes/services-pricing-2026-10.md`
+(market scan of Kwork / FL.ru listings, 2026-10-04: a bot floor at the p75 of real
+listings, clear of the 500–1 500 ₽ gig noise; a landing floor between the gig floor
+and the 25 000 ₽+ custom budgets). Floors qualify a lead without anchoring the top.
+
+- **Where a figure lives:** `<span class="price-num" data-price="bot">5 000 ₽</span>`
+  inside a `.price-line`. It appears twice on `services.html` (the strip under the
+  lede, the package card) and once in the teaser on `index.html`.
+- **To change a price** edit those five spans — no other copy on either page carries
+  a number, and `verify.cjs` fails if the strip, the card and the teaser disagree, if
+  a package loses its "от"/"from" label, or if a `₽` appears in prose (that is how the
+  old notice drifted to a figure no package carried).
+- **Per package, in order:** price → the problem it solves → who it suits → what is
+  included → what is explicitly **not** included → typical timeline → its own
+  next-step link (Telegram, 44px). A block after the cards lists the exclusions that
+  hold for every package (hosting/domain paid directly, support after handover,
+  someone else's code without access, content production).
+- Payment terms ("half up front, half on delivery", revisions included) are stated in
+  the note under the cards. Deadlines stay per project, as in the 2026-10 note.
+- The strip is a three-row price list under 640px instead of a wrapped row.
+
+**Open question (not decided here):** the bot and the automation packages share the
+same "от 5 000 ₽" floor, so the ladder shows two identical figures; the market note
+justifies both separately, but a reader may read it as a copy error if freelance
+pricing becomes a priority.
+
 
 ## Serve locally
 
