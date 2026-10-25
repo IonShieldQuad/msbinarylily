@@ -106,9 +106,15 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         if (!row) return { count: 0 };
         const links = [...row.querySelectorAll('a')];
         const first = links[0];
+        const kicker = row.querySelector('.kicker');
         return {
           count: links.length,
           inHead: !!row.closest('.case-head'),
+          // the verb is the bilingual part: a 60-character evidence label cannot be
+          // translated in place without breaking the head, so the row names the
+          // action in both languages and the link carries the label itself
+          kickerRu: kicker ? kicker.getAttribute('data-ru') : null,
+          kickerEn: kicker ? kicker.getAttribute('data-en') : null,
           firstHref: first ? first.getAttribute('href') : null,
           firstTarget: first ? first.getAttribute('target') : null,
           firstRel: first ? (first.getAttribute('rel') || '') : '',
@@ -471,11 +477,32 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     const shot = path.join(OUT, `${name}.png`);
     await page.screenshot({ path: shot, fullPage: false });
 
+    // the acceptance for the case's proof names 1440 as well as a phone: a head
+    // that grows (long evidence label, two of them) could push the link out of the
+    // first desktop screen while the phone still looked fine
+    facts.caseVerifyDesktop = await page.evaluate(() => {
+      const a = document.querySelector('.case-verify a');
+      if (!a) return null;
+      const r = a.getBoundingClientRect();
+      return { top: Math.round(r.top), vh: window.innerHeight, width: window.innerWidth, height: Math.round(r.height) };
+    });
+
     if (['index', 'case-tg', 'projects', 'services', 'contact'].includes(name)) {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForTimeout(400);
       await page.screenshot({ path: path.join(OUT, `${name}-mobile.png`), fullPage: false });
     }
+
+    // 390 is the phone the card measures on; 360 is the width the layout promises
+    // to hold. The proof has to be in the first screen of both.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(350);
+    facts.caseVerifyPhone = await page.evaluate(() => {
+      const a = document.querySelector('.case-verify a');
+      if (!a) return null;
+      const r = a.getBoundingClientRect();
+      return { top: Math.round(r.top), bottom: Math.round(r.bottom), vh: window.innerHeight, height: Math.round(r.height) };
+    });
 
     // 360px is the width the layout promises to hold: nothing may push it sideways
     await page.setViewportSize({ width: 360, height: 800 });
@@ -547,6 +574,13 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         if (v.outsideDocs) failures.push(`${r.name}: ${v.outsideDocs} verify link(s) that are not absolute http(s) URLs — they must open off-site`);
         if (v.firstTarget !== '_blank') failures.push(`${r.name}: verify link target=${j(v.firstTarget)} (external links open in a new tab)`);
         if (!/noopener/.test(v.firstRel) || !/noreferrer/.test(v.firstRel)) failures.push(`${r.name}: verify link rel=${j(v.firstRel)} (needs noopener noreferrer)`);
+        // bilingual: the row's verb must carry both languages...
+        if (!v.kickerRu || !v.kickerEn) failures.push(`${r.name}: verify row verb is not bilingual (ru=${j(v.kickerRu)} en=${j(v.kickerEn)})`);
+        // ...and the link must be inside the first screen of a phone and of a desktop
+        for (const [label, pos] of [['phone 390', f.caseVerifyPhone], ['desktop 1440', f.caseVerifyDesktop]]) {
+          if (!pos) failures.push(`${r.name}: verify row missing at ${label}`);
+          else if (pos.top >= pos.vh) failures.push(`${r.name}: first verify link at y=${pos.top} of a ${pos.vh}px ${label} screen — not reachable without scrolling`);
+        }
         const m = f.caseVerifyMobile;
         if (!m) failures.push(`${r.name}: verify row missing at 360px`);
         else {
