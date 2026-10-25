@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-10-25T03:12:57Z",
+    "generated_at": "2026-10-25T03:49:46Z",
     "source": "H:/ObsidianVaultCentral/Work/Personal/portfolio-site/cases",
     "schema_version": "1",
     "case_count": 9
@@ -869,6 +869,14 @@
         "no build step)"
       ],
       "evidence": [
+        {
+          "url": "https://ionshieldquad.github.io/Sorting-algorithms/sort/SortHTML.html",
+          "label": {
+            "ru": "открыть визуализатор",
+            "en": "open the visualizer"
+          },
+          "titled": true
+        },
         {
           "url": "https://github.com/IonShieldQuad/Sorting-algorithms",
           "label": "github.com",
