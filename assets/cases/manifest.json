@@ -1,0 +1,309 @@
+{
+  "schema": 1,
+  "note": "Asset manifest for the case-study pages. `file` is relative to assets/cases/. scripts/generate.py merges this into data/cases.json (`thumb` for the index card, `figures` for the case page) — never hand-edit data/*.json. Real-software screenshots and measured figures were captured in this session (log: capture-log-real.json); the repository/README screenshots came from the earlier capture pass via scripts/capture-cases.cjs. Human-readable table: manifest.md.",
+  "unavailable": {
+    "cpu-from-nand": "No screenshot of the Turing Complete schematic exists on disk and the game cannot be driven headlessly; the ISA/datapath diagram is drawn from the design note the CPU was built from.",
+    "lilys-innovations": "An in-game capture needs the game running with the mod loaded; the asset sheet is rendered from the mod's own shipped files instead.",
+    "android-apps": "Planner's map screen renders blank without a Google Maps API key, so the map is not shown; the Room-backed list is shown instead.",
+    "tg-aggregator": "A real Telegram digest needs the live bot and a real account; the offline demo renders the same message shape from synthetic fixtures, which is publishable as-is."
+  },
+  "cases": {
+    "tg-aggregator": {
+      "thumb": "tg-aggregator/tg-aggregator-digest.png",
+      "figures": [
+        {
+          "file": "tg-aggregator/tg-aggregator-digest.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Дайджест в стиле Telegram: карточка лида с каналом-источником, сработавшими ключевыми словами, вердиктом модели о релевантности и готовым черновиком ответа.",
+            "en": "Telegram-style digest message: a lead card with the source channel, the matched keywords, the model's relevance verdict and a drafted reply."
+          },
+          "caption": {
+            "ru": "Что получает команда: одно сообщение на лид, уже отфильтрованное и с готовым черновиком ответа.",
+            "en": "What the team actually receives: one message per lead, already triaged and with a reply draft attached."
+          }
+        },
+        {
+          "file": "tg-aggregator/tg-aggregator-run-summary.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Панель итогов офлайн-прогона: сколько постов прочитано, сохранено, отправлено в модель, и общая стоимость обращений к AI.",
+            "en": "Summary panel of the offline demo run: how many posts were read, stored and sent to the model, and the total AI cost."
+          },
+          "caption": {
+            "ru": "Итоги того же прогона: воронка от постов канала до отправленных лидов и стоимость AI-этапа.",
+            "en": "The same run's own summary: the funnel from channel posts down to delivered leads, and what the AI stage cost."
+          }
+        },
+        {
+          "file": "tg-aggregator/tg-aggregator-rejected.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Список постов, которые отсеял фильтр по ключевым словам, с указанием сработавшего правила для каждого.",
+            "en": "List of posts the keyword gate dropped before the model saw them, each labelled with the rule that matched."
+          },
+          "caption": {
+            "ru": "Не каждый пост стоит обращения к модели: отсев фильтра из того же прогона.",
+            "en": "Not every post deserves a model call: the keyword gate's droplist from the same run."
+          }
+        },
+        {
+          "file": "tg-aggregator/pipeline-overview.png",
+          "type": "document",
+          "alt": {
+            "ru": "Фрагмент README проекта: команды запуска сервиса и таблица эндпоинтов /health/live, /health/ready и /metrics.",
+            "en": "README excerpt for the service: local quick-start commands and the /health/live, /health/ready and /metrics endpoint table."
+          },
+          "caption": {
+            "ru": "Фрагмент README: команды быстрого старта и операционный контракт сервиса — проверки готовности и метрики Prometheus.",
+            "en": "README excerpt: the quick-start commands and the service's operational contract — readiness checks and Prometheus metrics."
+          }
+        }
+      ]
+    },
+    "ai-agents-automation": {
+      "thumb": "ai-agents-automation/tg-aggregator-pipeline.png",
+      "figures": [
+        {
+          "file": "ai-agents-automation/tg-aggregator-pipeline.png",
+          "type": "diagram",
+          "alt": {
+            "ru": "Схема конвейера из шести этапов: чтение каналов через Telethon, приём с дедупликацией, фильтр по ключевым словам, классификация и черновик от DeepSeek, рендер доставки, Telegram-бот; ниже — четыре счётчика из демо-прогона.",
+            "en": "Six-stage pipeline diagram: Telethon reader, ingestion with dedupe, keyword gate, DeepSeek classify-and-draft, delivery renderer, Telegram bot, with four counters from the demo run below."
+          },
+          "caption": {
+            "ru": "Как собран конвейер — и какие числа дал один демо-прогон.",
+            "en": "How the pipeline is wired — and the numbers one demo run actually produced."
+          }
+        },
+        {
+          "file": "ai-agents-automation/service-readme.png",
+          "type": "document",
+          "alt": {
+            "ru": "Раздел «Current status» в README сервиса telegram-parser: список реализованных возможностей от приёма сообщений до проверки черновиков ответов человеком.",
+            "en": "The 'Current status' section of the telegram-parser README: the implemented capabilities, from recoverable ingestion to mandatory human review of reply drafts."
+          },
+          "caption": {
+            "ru": "Статус сервиса из README: восстановимый приём сообщений, версионированная классификация, аудит жизненного цикла лида и обязательная проверка ответа человеком.",
+            "en": "The service status section of the README: recoverable ingestion, versioned classification, an audited lead lifecycle, and a mandatory human review step."
+          }
+        }
+      ]
+    },
+    "lilys-innovations": {
+      "thumb": "lilys-innovations/lilys-innovations-assets.png",
+      "figures": [
+        {
+          "file": "lilys-innovations/lilys-innovations-assets.png",
+          "type": "artefact",
+          "alt": {
+            "ru": "Сетка арта самого мода: шесть иконок систем (аблятивная броня, вспомогательный реактор, РЭБ, волоконная обшивка, отсек инфузии, нейтрализатор разряда), а также эффекты взрыва, помех и интерфейсный арт; рядом — число файлов и строк Lua.",
+            "en": "Grid of the mod's own art: six system icons (ablative armour, auxiliary reactor, ECM suite, fibre liner, infusion bay, shock neutraliser) plus explosion, jammer and interface art, with file and line counts beside it."
+          },
+          "caption": {
+            "ru": "Выпущенная работа, а не описание её: иконки систем, эффекты и интерфейсный арт из репозитория, за которыми 9 046 строк Lua.",
+            "en": "Shipped work, not a description of it: the systems' icons, effects and interface art from the repository, with 9,046 lines of Lua behind them."
+          }
+        },
+        {
+          "file": "lilys-innovations/repository.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Страница репозитория мода на GitHub: дерево каталогов graphics, data, img и audio, 37 тегов-релизов, язык Lua — 100 %.",
+            "en": "The mod's GitHub repository page: the graphics, data, img and audio folders, 37 tagged releases, and Lua as the only language."
+          },
+          "caption": {
+            "ru": "Опубликованный мод: репозиторий с 37 релизами, каталогами графики, звука и данных и единственным языком — Lua.",
+            "en": "The published mod: a repository with 37 releases, separate graphics, audio and data folders, and Lua as the only language."
+          }
+        }
+      ]
+    },
+    "android-apps": {
+      "thumb": "android-apps/android-tetris-playfield.png",
+      "figures": [
+        {
+          "file": "android-apps/android-tetris-playfield.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Игра Tetris на эмуляторе Android: стакан с несколькими уложенными фигурами, счётчик очков, превью следующей фигуры и кнопки влево/вправо/вниз.",
+            "en": "Android Tetris game running on an emulator: playfield with a stack of settled tetrominoes, score counter, next-piece preview and left/right/down controls."
+          },
+          "caption": {
+            "ru": "Tetris на собственных View: стакан, превью следующей фигуры и счёт, запущенные на Android 9.",
+            "en": "Tetris, rebuilt from custom Views: the board, the next-piece preview and the score line, running on Android 9."
+          }
+        },
+        {
+          "file": "android-apps/android-planner-items.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Список Items в приложении Planner на эмуляторе: три записи (Museum tour, Groceries run, Library pickup) с кнопками правки и удаления, данные из Room.",
+            "en": "Planner's Items list on an emulator: three records (Museum tour, Groceries run, Library pickup) with edit and delete actions, backed by a Room database."
+          },
+          "caption": {
+            "ru": "Список на Room с тремя записями, добавленными через собственную форму приложения.",
+            "en": "Planner's Room-backed item list with three records added through the app's own add form."
+          }
+        },
+        {
+          "file": "android-apps/planner-repository.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Страница репозитория Planner на GitHub: дерево исходников Android-приложения на Java и история коммитов.",
+            "en": "The Planner repository page on GitHub: the source tree of the Java Android app and its commit history."
+          },
+          "caption": {
+            "ru": "Репозиторий Planner — более крупное из двух Android-приложений этого кейса: реальный Gradle-проект с Room и Google Maps.",
+            "en": "The Planner repository — the larger of the two Android apps in this case: a real Gradle project built on Room and Google Maps."
+          }
+        }
+      ]
+    },
+    "compiler-translator": {
+      "thumb": "compiler-translator/compiler-translation.png",
+      "figures": [
+        {
+          "file": "compiler-translator/compiler-translation.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Две панели рядом: исходная программа на Pascal из 17 строк и сгенерированная из неё программа на PL/1 из 26 строк.",
+            "en": "Two side-by-side panes: a 17-line Pascal program and the 26-line PL/1 program the compiler generated from it."
+          },
+          "caption": {
+            "ru": "На входе исходник, на выходе PL/1: реальный результат компилятора на его же тестовой программе.",
+            "en": "Source in, PL/1 out: the compiler's real output on its own test program."
+          }
+        },
+        {
+          "file": "compiler-translator/analyzer-repository.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Страница репозитория Analyzer на GitHub: исходники компилятора на Java и история коммитов.",
+            "en": "The Analyzer repository page on GitHub: the Java compiler sources and the commit history."
+          },
+          "caption": {
+            "ru": "Репозиторий Analyzer — одна из двух частей транслятора; второй компонент, лексический анализатор, лежит в отдельном репозитории.",
+            "en": "The Analyzer repository — one of the translator's two parts; the lexer lives in its own repository."
+          }
+        }
+      ]
+    },
+    "neural-net-from-scratch": {
+      "thumb": "neural-net-from-scratch/neural-net-training.png",
+      "figures": [
+        {
+          "file": "neural-net-from-scratch/neural-net-training.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Страница обучения сети в работе: холст симуляции с препятствиями и агентом, рядом панели настроек и статуса с номером итерации, прохода и текущим счётом.",
+            "en": "The evasion-learning page mid-training: the simulation canvas with the obstacles and the agent, beside the settings and status panels showing iteration, pass and score."
+          },
+          "caption": {
+            "ru": "Сеть учится прямо в браузере: настройки, живая симуляция и счёт, который она минимизирует.",
+            "en": "The network learning in the browser: settings, the live simulation, and the score it is minimising."
+          }
+        },
+        {
+          "file": "neural-net-from-scratch/evasion-learning-repository.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Страница репозитория Evasion-learning на GitHub: исходники нейросети на чистом JavaScript и история коммитов.",
+            "en": "The Evasion-learning repository page on GitHub: the vanilla-JavaScript neural network sources and commit history."
+          },
+          "caption": {
+            "ru": "Репозиторий сети, обучающейся уклоняться от падающих блоков: чистый JavaScript без библиотек.",
+            "en": "The repository of a network trained to dodge falling blocks: vanilla JavaScript, no libraries."
+          }
+        }
+      ]
+    },
+    "cpu-from-nand": {
+      "thumb": "cpu-from-nand/symphony-isa.png",
+      "figures": [
+        {
+          "file": "cpu-from-nand/symphony-isa.png",
+          "type": "diagram",
+          "alt": {
+            "ru": "Схема процессора Symphony: шесть слоёв тракта данных от вентиля NAND до шины, таблица регистров и четыре 32-битных кодировки инструкций.",
+            "en": "Diagram of the Symphony CPU: six datapath layers from a NAND gate up to the bus, the register file, and four 32-bit instruction encodings."
+          },
+          "caption": {
+            "ru": "Система команд, вокруг которой построен процессор: три поля регистров и 16-битный непосредственный операнд в одном 32-битном слове.",
+            "en": "The instruction set the CPU was built around: three register fields and a 16-bit immediate in one 32-bit word."
+          }
+        }
+      ]
+    },
+    "compression-algorithms": {
+      "thumb": "compression-algorithms/compression-results.png",
+      "figures": [
+        {
+          "file": "compression-algorithms/compression-results.png",
+          "type": "artefact",
+          "alt": {
+            "ru": "Таблица результатов двух компрессоров на одном файле Java в 3 442 байта: Хаффман — 2 646 байт, сжатие 1,30×, обратное декодирование точное; арифметическое кодирование — 2 188 байт, 1,57×, декодер расходится после 2 406 символов.",
+            "en": "Results table comparing the two compressors on one 3,442-byte Java file: Huffman 2,646 bytes at 1.30x with an exact round-trip; arithmetic 2,188 bytes at 1.57x with the decoder diverging after 2,406 characters."
+          },
+          "caption": {
+            "ru": "Оба компрессора на одном и том же файле, включая проверку обратного декодирования.",
+            "en": "Both compressors measured on the same file, including the round-trip check."
+          }
+        },
+        {
+          "file": "compression-algorithms/compressor-repository.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Страница репозитория Compressor-2 на GitHub: реализация кодирования Хаффмана и арифметического кодирования на Java.",
+            "en": "The Compressor-2 repository page on GitHub: Huffman and arithmetic coding implemented in Java."
+          },
+          "caption": {
+            "ru": "Приложение-компрессор с кодированием Хаффмана и арифметическим кодированием; RLE-компрессор для изображений — в отдельном репозитории.",
+            "en": "The file compressor with Huffman and arithmetic coding; the image RLE compressor lives in its own repository."
+          }
+        }
+      ]
+    },
+    "sorting-visualizer": {
+      "thumb": "sorting-visualizer/sorting-visualizer-1d.png",
+      "figures": [
+        {
+          "file": "sorting-visualizer/sorting-visualizer-1d.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Визуализатор сортировок в режиме 1D: 99 столбцов случайного массива в середине быстрой сортировки, сравниваемая пара подсвечена, слева настройки, в статусе — «Quick sort».",
+            "en": "The sorting visualizer in 1D mode: 99 bars of a random array mid-quicksort with the compared pair highlighted, controls on the left and the status bar naming Quick sort."
+          },
+          "caption": {
+            "ru": "Быстрая сортировка в работе: 99 значений, подсветка текущего сравнения и строка статуса.",
+            "en": "Quicksort mid-flight in 1D: 99 values, the live comparison highlight, and the running status."
+          }
+        },
+        {
+          "file": "sorting-visualizer/sorting-visualizer-2d.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Тот же визуализатор в режиме 2D: значения разложены сеткой цветных клеток, которые переставляет пузырьковая сортировка.",
+            "en": "The same visualizer in 2D mode: the values laid out as a grid of coloured cells being reordered by bubble sort."
+          },
+          "caption": {
+            "ru": "Режим 2D: тот же массив сеткой, сортировка идёт по клеткам.",
+            "en": "The 2D mode: the same array as a grid, sorting cell by cell."
+          }
+        },
+        {
+          "file": "sorting-visualizer/sorting-repository.png",
+          "type": "screenshot",
+          "alt": {
+            "ru": "Страница репозитория Sorting-algorithms на GitHub: страница визуализации алгоритмов сортировки на JavaScript.",
+            "en": "The Sorting-algorithms repository page on GitHub: the JavaScript page that visualizes the sorting algorithms."
+          },
+          "caption": {
+            "ru": "Страница-визуализация: 11 алгоритмов сортировки в 1D и 2D, чистый JavaScript без зависимостей.",
+            "en": "The visualization page: 11 sorting algorithms in 1D and 2D, vanilla JavaScript with no dependencies."
+          }
+        }
+      ]
+    }
+  }
+}

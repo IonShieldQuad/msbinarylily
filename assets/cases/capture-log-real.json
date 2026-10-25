@@ -1,0 +1,106 @@
+[
+  {
+    "id": "tg-aggregator",
+    "file": "tg-aggregator/tg-aggregator-digest.png",
+    "kind": "screenshot",
+    "source": "H:/Work/tg-aggregator/demo/preview.html",
+    "how": "Chromium 1440x1000 dpr2, element screenshot of the first .bubble, downscaled to 1440 wide",
+    "data": "synthetic demo fixtures (no real channel, client or person)"
+  },
+  {
+    "id": "tg-aggregator",
+    "file": "tg-aggregator/tg-aggregator-run-summary.png",
+    "kind": "screenshot",
+    "source": "H:/Work/tg-aggregator/demo/preview.html",
+    "how": "element screenshot of .meta, downscaled to 1440 wide",
+    "data": "the demo run's own reported counters"
+  },
+  {
+    "id": "tg-aggregator",
+    "file": "tg-aggregator/tg-aggregator-rejected.png",
+    "kind": "screenshot",
+    "source": "H:/Work/tg-aggregator/demo/preview.html",
+    "how": "element screenshot of the .dropped block, downscaled to 1440 wide",
+    "data": "keyword-gate droplist from the same run"
+  },
+  {
+    "id": "ai-agents-automation",
+    "file": "ai-agents-automation/tg-aggregator-pipeline.png",
+    "kind": "diagram",
+    "source": "H:/ObsidianVaultCentral/Work/Personal/tg-aggregator/specs/system-architecture.md",
+    "how": "hand-built HTML/SVG figure, screenshotted at 1440 wide",
+    "data": "stage list from the spec, counters from the offline demo report"
+  },
+  {
+    "id": "lilys-innovations",
+    "file": "lilys-innovations/lilys-innovations-assets.png",
+    "kind": "artefact",
+    "source": "https://github.com/IonShieldQuad/lilys-innovations (shallow clone)",
+    "how": "real PNGs from img/ and graphics/ rendered at native size in an HTML sheet, screenshotted at 1440 wide",
+    "data": "12 Lua files, 9,045 lines, 564 PNGs — counted from the clone"
+  },
+  {
+    "id": "android-apps",
+    "file": "android-apps/android-tetris-playfield.png",
+    "kind": "screenshot",
+    "source": "D:/AndroidStudioProjects/Tetris/app/build/outputs/apk/debug/app-debug.apk",
+    "how": "installed on AVD casetest (API 28), PLAY tapped, pieces dropped, adb exec-out screencap, status+nav bars cropped, 760 px wide",
+    "data": "live app, score 0"
+  },
+  {
+    "id": "android-apps",
+    "file": "android-apps/android-planner-items.png",
+    "kind": "screenshot",
+    "source": "D:/AndroidStudioProjects/Planner/app/build/outputs/apk/debug/app-debug.apk",
+    "how": "installed with adb install -t (test-only APK), DATABASE → ITEMS, three records added via the app's own form, screencap cropped and downscaled",
+    "data": "three records written to the Room database in this session"
+  },
+  {
+    "id": "compiler-translator",
+    "file": "compiler-translator/compiler-translation.png",
+    "kind": "screenshot",
+    "source": "https://github.com/IonShieldQuad/Analyzer (shallow clone)",
+    "how": "javac (with a javafx.util.Pair shim + the repo's annotations jar), java core.AnalyzerMain on the repo's input.txt; both panes are the run's input.txt/generated.txt",
+    "data": "real compiler output; symbol table resolved g, max, min, u, v"
+  },
+  {
+    "id": "neural-net-from-scratch",
+    "file": "neural-net-from-scratch/neural-net-training.png",
+    "kind": "screenshot",
+    "source": "https://github.com/IonShieldQuad/Evasion-learning (shallow clone)",
+    "how": "evasionHTML.html in Chromium, initGrid() then toggle(), 6 s of training, element screenshot of #box",
+    "data": "status: Finished, pass 18, score 276"
+  },
+  {
+    "id": "cpu-from-nand",
+    "file": "cpu-from-nand/symphony-isa.png",
+    "kind": "diagram",
+    "source": "H:/ObsidianVaultCentral/Work/Personal/portfolio-site/notes/symphony-isa.md",
+    "how": "hand-built HTML figure, screenshotted at 1440 wide",
+    "data": "register file and instruction encodings transcribed from the note"
+  },
+  {
+    "id": "compression-algorithms",
+    "file": "compression-algorithms/compression-results.png",
+    "kind": "artefact",
+    "source": "https://github.com/IonShieldQuad/Compressor-2 (shallow clone) + RepeatListener.java from the Tetris repo",
+    "how": "Java probe calling HuffmanCompressor/ArithmeticCompressor, sizes via Utils.getSize(), decompress() re-run for the round-trip check; results table rendered and screenshotted",
+    "data": "3,442 bytes in; Huffman 2,646 (1.301x, exact); arithmetic 2,188 (1.573x, diverges after 2,406 chars)"
+  },
+  {
+    "id": "sorting-visualizer",
+    "file": "sorting-visualizer/sorting-visualizer-1d.png",
+    "kind": "screenshot",
+    "source": "https://github.com/IonShieldQuad/Sorting-algorithms (shallow clone)",
+    "how": "SortHTML.html in Chromium, 99 random values, quicksort, delay 4 ms, captured 700 ms in; element screenshot of #box",
+    "data": "live sort in progress"
+  },
+  {
+    "id": "sorting-visualizer",
+    "file": "sorting-visualizer/sorting-visualizer-2d.png",
+    "kind": "screenshot",
+    "source": "https://github.com/IonShieldQuad/Sorting-algorithms (shallow clone)",
+    "how": "same page, 2D mode, bubble sort, delay 4 ms, captured 1.2 s in",
+    "data": "live sort in progress"
+  }
+]

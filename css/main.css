@@ -572,10 +572,18 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 .section-carbon .card p { color: var(--text-on-dark-dim); }
 .section-carbon .card-flag { color: var(--hot); }
 
-.section-carbon .card { --ring-color: var(--line-dark); --ring-surface: var(--carbon-2); color: var(--text-on-dark); }
-.section-carbon .card-hex { color: var(--text-on-dark-dim); }
-.section-carbon .card p { color: var(--text-on-dark-dim); }
-.section-carbon .card-flag { color: var(--hot); }
+/* the card thumbnail is the case's own visual, bled to the card edge (the card's
+   padding is 1.3rem 1.3rem 1.5rem). A fixed 16:10 box means the grid never
+   reflows when a screenshot of a different height loads. */
+.card-thumb {
+  margin: -1.3rem -1.3rem 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--carbon-2);
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+.card-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.section-carbon .card-thumb { border-bottom-color: var(--line-dark); }
 
 /* --------------------------------------------------------------- holo block -- */
 .holo {
@@ -636,7 +644,31 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 .evidence a { font-family: var(--font-mono); font-size: 0.82rem; word-break: break-word; overflow-wrap: anywhere; }
 .pager { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 1.4rem; }
 .pager a { font-family: var(--font-mono); font-size: 0.8rem; text-decoration: none; letter-spacing: 0.06em; }
+/* a pager link is a real target: 20px of line box fails WCAG 2.2 AA 2.5.8 (24x24),
+   and it is the only way on from a case besides the nav */
+.pager a { display: inline-flex; align-items: center; min-height: 24px; padding-block: 0.3rem; }
 .pager a:hover { color: var(--accent-ink); }
+
+/* case visuals: the artefact gallery sits between the case head and the body, so
+   the first thing a reader meets is the evidence, not a wall of copy */
+.case-gallery-band { padding-block: clamp(1.6rem, 4vw, 2.6rem); }
+.case-gallery { display: grid; gap: var(--gap); }
+.case-figure { margin: 0; display: grid; gap: 0.6rem; }
+.case-figure img {
+  width: 100%; height: auto;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+.case-figure figcaption {
+  font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.55;
+  letter-spacing: 0.02em; color: var(--ink-dim); max-width: 76ch;
+}
+@media (min-width: 900px) {
+  .case-gallery { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  /* one figure alone must not stretch to 1180px: a 1280px capture stays readable
+     at its own width instead of being upscaled */
+  .case-figure:only-child { max-width: 900px; }
+}
 
 /* --------------------------------------------------------------- timeline -- */
 .timeline { display: grid; gap: 1.1rem; }
@@ -704,6 +736,9 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 .site-footer a { color: var(--text-on-dark); text-decoration: none; }
 .site-footer a:hover { color: var(--accent-bright); }
 .footer-links { display: flex; flex-wrap: wrap; gap: 1rem; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; }
+/* the footer's link row measures 20px tall on a phone — give each link a 24px+
+   hit area so it clears WCAG 2.2 AA 2.5.8 without changing the type */
+.footer-links a { display: inline-flex; align-items: center; min-height: 24px; padding-block: 0.3rem; }
 .footer-meta { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; }
 
 /* ------------------------------------------------------------ responsive -- */

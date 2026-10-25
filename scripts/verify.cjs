@@ -30,6 +30,14 @@ const pages = [
   ['lab-current-field', 'lab-current-field.html', 'ru-RU', 'ru'],
   ['contact', 'contact.html', 'ru-RU', 'ru'],
   ['case-tg', 'case.html?project=tg-aggregator', 'ru-RU', 'ru'],
+  ['case-ai', 'case.html?project=ai-agents-automation', 'ru-RU', 'ru'],
+  ['case-mod', 'case.html?project=lilys-innovations', 'ru-RU', 'ru'],
+  ['case-android', 'case.html?project=android-apps', 'ru-RU', 'ru'],
+  ['case-compiler', 'case.html?project=compiler-translator', 'ru-RU', 'ru'],
+  ['case-nn', 'case.html?project=neural-net-from-scratch', 'ru-RU', 'ru'],
+  ['case-cpu', 'case.html?project=cpu-from-nand', 'ru-RU', 'ru'],
+  ['case-compression', 'case.html?project=compression-algorithms', 'ru-RU', 'ru'],
+  ['case-sorting', 'case.html?project=sorting-visualizer', 'ru-RU', 'ru'],
   ['case-missing', 'case.html?project=does-not-exist', 'ru-RU', 'ru'],
   ['index-static', 'index.html?static', 'ru-RU', 'ru'],
   ['index-en-browser', 'index.html', 'en-US', 'en'],
@@ -76,6 +84,18 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         const b = document.getElementById('lead-form-block');
         return b ? b.hidden : null;
       })(),
+      // WCAG 2.2 AA 2.5.8: the footer's link row is the site's last contact path,
+      // and it used to be a 20px line box on a phone
+      footerTap: (() => {
+        const a = document.querySelector('.footer-links a');
+        return a ? Math.round(a.getBoundingClientRect().height) : null;
+      })(),
+      // a case page must end with a way to act on it, not only prev/next case links
+      caseCta: (() => {
+        const root = document.getElementById('case-root');
+        return root ? [...root.querySelectorAll('a')].filter((a) => /(^|\/)contact\.html/.test(a.getAttribute('href') || '')).length : null;
+      })(),
+      vaultWording: /в заметках хранилища|\(vault note\)/.test(document.body.innerText),
       heroCoverage: (() => {
         const hero = document.querySelector('.hero');
         if (!hero) return null;
@@ -104,6 +124,38 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       })(),
       // the icon set and the header mark are the brand surface: an SVG-only favicon
       // leaves Safari with nothing, and the mark is blue/red (the engine's poles)
+      // case visuals: an index card without a thumbnail, a figure without alt text,
+      // an image that did not actually load, or a leftover [[SCREENSHOT: …]] marker
+      visuals: {
+        cards: document.querySelectorAll('.card').length,
+        thumbs: document.querySelectorAll('.card-thumb img').length,
+        thumbAlts: [...document.querySelectorAll('.card-thumb img')].filter((i) => (i.getAttribute('alt') || '').trim()).length,
+        figures: [...document.querySelectorAll('.case-figure')].map((f) => {
+          const img = f.querySelector('img');
+          return {
+            src: img?.getAttribute('src') || null,
+            alt: (img?.getAttribute('alt') || '').trim(),
+            loaded: !!img && img.complete && img.naturalWidth > 0,
+            w: img?.naturalWidth || 0,
+            caption: (f.querySelector('figcaption')?.textContent || '').trim(),
+          };
+        }),
+        placeholders: (document.body.innerText.match(/\[\[\s*SCREENSHOT/gi) || []).length,
+        // the evidence sidebar used to print "(vault note)" for a reference the
+        // reader cannot open; the honesty line replaced it
+        vaultNoteLeak: /vault note|в заметках хранилища/i.test(document.body.innerText),
+        honestyLine: /по запросу|on request/i.test(document.body.innerText),
+        ogImage: document.head.querySelector('meta[property="og:image"]')?.content || null,
+        // links the case body itself offers (the footer's Telegram/GitHub are not
+        // evidence for the case, so they must not satisfy the evidence gate)
+        caseLinks: [...document.querySelectorAll('#case-root a[href^="http"]')].map((a) => a.getAttribute('href')),
+        extLinks: [...document.querySelectorAll('a[href^="http"]')].map((a) => ({
+          href: a.getAttribute('href'),
+          target: a.getAttribute('target'),
+          rel: a.getAttribute('rel') || '',
+          text: (a.textContent || '').trim().slice(0, 40),
+        })),
+      },
       icons: [...document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')]
         .map((l) => l.getAttribute('href')),
       themeColor: document.head.querySelector('meta[name="theme-color"]')?.content || null,
@@ -434,6 +486,15 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (f.h1Count !== 1) failures.push(`${r.name}: ${f.h1Count} <h1> (exactly one expected)`);
     if (f.literalMd.length) failures.push(`${r.name}: markdown markers in plain text — ${j(f.literalMd)}`);
     if (f.vocabulary.length) failures.push(`${r.name}: internal vocabulary in visible copy — ${j(f.vocabulary)}`);
+    // the shorthands a returning visitor takes for granted: the footer link row and
+    // the case page's own way out to contact are both measured, not assumed
+    if (f.footerTap !== null && f.footerTap !== undefined && f.footerTap < 24) {
+      failures.push(`${r.name}: footer link hit area is ${f.footerTap}px tall (24 minimum, WCAG 2.2 AA 2.5.8)`);
+    }
+    if (f.caseCta !== null && f.caseCta === 0 && f.caseTitle && !/not found|не найден/i.test(f.caseTitle)) {
+      failures.push(`${r.name}: case page has no link to contact.html`);
+    }
+    if (f.vaultWording) failures.push(`${r.name}: "(в заметках хранилища)"/"(vault note)" — internal storage wording on a client-facing page`);
     if (f.hero && f.hero.present) {
       if (!f.hero.halo) failures.push(`${r.name}: hero mark has no dark pocket (.hero-visual-halo)`);
       if (f.hero.logoLoaded !== true) failures.push(`${r.name}: hero mark did not load (naturalWidth ${f.hero.logoLoaded})`);
@@ -469,6 +530,20 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     }
   }
   if (!navConsistent) failures.push('nav is not identical on every page');
+
+  /* The footer row is navigation too, and nothing was checking it: index.html and
+     case.html used to end that row with "проекты" while the other pages ended with
+     "контакты", so which pages offered a contact link in the footer was accidental. */
+  const footerPages = ['index.html', 'projects.html', 'services.html', 'about.html',
+    'laboratory.html', 'contact.html', 'case.html', 'lab-current-field.html'];
+  for (const rel of footerPages) {
+    const html = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    const block = (html.match(/<div class="footer-links"[^>]*>([\s\S]*?)<\/div>/) || [])[1];
+    if (!block) continue;
+    const hrefs = [...block.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
+    const tail = hrefs[hrefs.length - 1];
+    if (tail !== 'contact.html') failures.push(`${rel}: footer link row ends with ${j(tail)} — every page must end it with contact.html`);
+  }
 
   /* Prices are repeated on purpose — once in the strip under the services lede, once
      on each package card, once in the teaser on the index — so the acceptance rule is
@@ -512,7 +587,6 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     if (!offeredKeys.includes(key)) failures.push(`index.html quotes a "${key}" package services.html does not offer`);
   }
 
-
   // the icon files must exist on disk, since a 404 favicon is silent in a browser
   for (const f of ['assets/emblem.svg', 'assets/favicon-16.png', 'assets/favicon-32.png',
                    'assets/apple-touch-icon.png']) {
@@ -545,6 +619,58 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
         failures.push(`${r.name}: header mark colours ${j(f.brandMark.colours)}`);
       }
       if (f.brandMark.box !== '0 0 24 24') failures.push(`${r.name}: header mark viewBox ${j(f.brandMark.box)}`);
+    }
+  }
+
+  /* ---- case visuals: screenshots, alt text, captions, and link handling ---- */
+  const caseData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/cases.json'), 'utf8'));
+  const assetManifestPath = path.join(ROOT, 'assets', 'cases', 'manifest.json');
+  const assetManifest = fs.existsSync(assetManifestPath)
+    ? JSON.parse(fs.readFileSync(assetManifestPath, 'utf8')) : { cases: {} };
+  const manifestIds = Object.keys(assetManifest.cases || {});
+  const withThumb = caseData.cases.filter((c) => c.thumb).length;
+  for (const c of caseData.cases) {
+    for (const f of c.visuals || []) {
+      if (!fs.existsSync(path.join(ROOT, f.src))) failures.push(`case ${c.id}: visual ${f.src} is not on disk`);
+      if (!f.alt || !f.alt.en || !f.alt.ru) failures.push(`case ${c.id}: visual ${f.src} lacks alt text in one language`);
+    }
+  }
+  for (const id of manifestIds) {
+    const c = caseData.cases.find((x) => x.id === id);
+    if (!c) failures.push(`assets/cases/manifest.json: '${id}' is not a case id`);
+    // a figure is dropped by the generator when its file is missing or its alt is
+    // empty — that must fail here rather than quietly ship a case with no evidence
+    else if (!(c.visuals || []).length) failures.push(`case ${id}: has assets in the manifest but no visual on the page`);
+  }
+  for (const r of report) {
+    const v = r.facts.visuals;
+    if (v.placeholders) failures.push(`${r.name}: ${v.placeholders} [[SCREENSHOT: …]] placeholder(s) left on the page`);
+    if (v.vaultNoteLeak) failures.push(`${r.name}: the page still prints a "(vault note)" reference`);
+    for (const a of v.extLinks) {
+      if (a.target !== '_blank') failures.push(`${r.name}: external link ${j(a.text)} (${a.href}) does not open in a new tab`);
+      if (!/\bnoopener\b/.test(a.rel) || !/\bnoreferrer\b/.test(a.rel)) failures.push(`${r.name}: external link ${j(a.text)} has rel=${j(a.rel)}`);
+    }
+    if (v.thumbs && v.thumbAlts !== v.thumbs) {
+      failures.push(`${r.name}: ${v.thumbs - v.thumbAlts} case thumbnail(s) without alt text`);
+    }
+    if (r.name === 'projects' && v.thumbs !== withThumb) {
+      failures.push(`projects: ${v.thumbs} thumbnail(s) rendered for ${withThumb} case(s) carrying one`);
+    }
+    if (r.rel.startsWith('case.html?project=')) {
+      const id = new URLSearchParams(r.rel.split('?')[1]).get('project');
+      const c = caseData.cases.find((x) => x.id === id);
+      if (!c) continue;   // the not-found state: nothing to gate
+      const want = (c.visuals || []).length;
+      if (v.figures.length !== want) failures.push(`${r.name}: ${v.figures.length} figure(s) rendered, ${want} visual(s) in the manifest`);
+      v.figures.forEach((f, i) => {
+        if (!f.alt) failures.push(`${r.name}: figure ${i + 1} has no alt text`);
+        if (!f.loaded) failures.push(`${r.name}: figure ${i + 1} (${f.src}) did not load`);
+        if (!f.caption) failures.push(`${r.name}: figure ${i + 1} has no caption`);
+      });
+      if (want && !v.ogImage) failures.push(`${r.name}: no og:image for a case that has a visual`);
+      // the evidence gate: an openable link, or a plain-line admission that there
+      // is none — silence is the failure
+      if (!v.caseLinks.length && !v.honestyLine) failures.push(`${r.name}: no external link and no honesty line about the code not being public`);
     }
   }
 

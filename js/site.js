@@ -113,7 +113,7 @@
       .replace(/\b(https?:\/\/[^\s<)]+)/g, (m) => {
         const url = m.replace(/[.,;]+$/, '');
         const tail = m.slice(url.length);
-        return `<a href="${url}" rel="noopener">${url}</a>${tail}`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${tail}`;
       });
   }
 
@@ -148,7 +148,7 @@
   /* page metadata for the single case template: one HTML file serves every case,
      so the title / description / og:* / canonical have to be written per case or
      every link previews as the same generic page */
-  function setMeta(title, description, canonical) {
+  function setMeta(title, description, canonical, image) {
     document.title = title;
     const setMetaTag = (attr, key, value) => {
       let el = document.head.querySelector(`meta[${attr}="${key}"]`);
@@ -164,7 +164,15 @@
     if (description) setMetaTag('property', 'og:description', description);
     setMetaTag('property', 'og:url', canonical);
     setMetaTag('property', 'og:type', 'article');
-    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    // a link preview with no image is a grey card: the case's first visual is the
+    // only picture the site has for it, so it becomes og:image (absolute, since a
+    // relative URL is ignored by every crawler)
+    if (image) {
+      setMetaTag('property', 'og:image', new URL(image, location.href).href);
+      setMetaTag('name', 'twitter:card', 'summary_large_image');
+    } else {
+      setMetaTag('name', 'twitter:card', 'summary');
+    }
     let link = document.head.querySelector('link[rel="canonical"]');
     if (!link) {
       link = document.createElement('link');
@@ -201,8 +209,15 @@
     const flag = c.featured
       ? `<span class="card-flag" data-ru="featured" data-en="featured">featured</span>`
       : `<span class="chip">${themeLabel(c.theme)}</span>`;
+    // an index card carries a thumbnail when the case has a visual: the first
+    // figure's alt text is reused, so the image is described exactly once
+    const first = (c.visuals || [])[0];
+    const thumb = c.thumb
+      ? `<div class="card-thumb"><img src="${escapeHtml(c.thumb)}" alt="${escapeHtml(first ? t(first.alt) : title)}" loading="lazy" decoding="async"></div>`
+      : '';
     return `
       <a class="card clip ring reveal" href="case.html?project=${encodeURIComponent(c.id)}" style="transition-delay:${Math.min(index * 60, 360)}ms">
+        ${thumb}
         <div class="card-top">
           <svg class="card-hex" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.6 21 7v10l-9 5.4L3 17V7z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12 6.4 16.8 9v5.2L12 16.9l-4.8-2.7V9z" fill="currentColor" opacity=".45"/></svg>
           ${flag}
@@ -269,6 +284,17 @@
     observeReveals();
   }
 
+  /* one case-page figure: the alt text is the description a screen reader gets,
+     the caption is what a sighted reader gets — both come from the asset manifest */
+  function figureBlock(fig, index) {
+    const alt = t(fig.alt);
+    const caption = t(fig.caption);
+    return `<figure class="case-figure">
+            <img src="${escapeHtml(fig.src)}" alt="${escapeHtml(alt)}" ${index === 0 ? 'loading="eager"' : 'loading="lazy"'} decoding="async">
+            ${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ''}
+          </figure>`;
+  }
+
   function renderCasePage() {
     const host = document.getElementById('case-root');
     if (!host) return;
@@ -291,7 +317,8 @@
       return;
     }
     setMeta(`${t(c.title)} — MsBinaryLily`,
-      plainMd(String(t(c.overview) || '').split(/\n/)[0]).slice(0, 180), caseUrl(c.id));
+      plainMd(String(t(c.overview) || '').split(/\n/)[0]).slice(0, 180), caseUrl(c.id),
+      (c.visuals || [])[0] ? (c.visuals[0].src) : null);
 
     const order = state.cases;
     const i = order.indexOf(c);
@@ -315,6 +342,8 @@
       ? `<p class="empty-state" style="margin-top:1.2rem">перевод: AI-assisted, вычитка вручную ещё не сделана</p>`
       : '';
 
+    const figures = c.visuals || [];
+
     host.innerHTML = `
       <section class="case-head">
         <div class="wrap">
@@ -324,6 +353,14 @@
           <div class="chips">${(c.stack || []).map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('')}</div>
         </div>
       </section>
+      ${figures.length ? `
+      <section class="section-panel case-gallery-band">
+        <div class="wrap">
+          <div class="case-gallery">
+            ${figures.map(figureBlock).join('')}
+          </div>
+        </div>
+      </section>` : ''}
       <section class="section-panel">
         <div class="wrap">
           ${notice}
@@ -345,8 +382,8 @@
                 <p class="kicker">evidence</p>
                 <ul class="evidence">
                   ${c.evidence.map((e) => e.url
-                    ? `<li><a href="${escapeHtml(e.url)}" rel="noopener">${escapeHtml(e.url.replace(/^https?:\/\//, ''))}</a></li>`
-                    : `<li><span class="empty-state">${escapeHtml(e.label)} <span data-ru="(в заметках хранилища)" data-en="(vault note)">(в заметках хранилища)</span></span></li>`).join('')}
+                    ? `<li><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(e.url.replace(/^https?:\/\//, ''))}</a></li>`
+                    : `<li><span class="empty-state">${escapeHtml(e.label)} <span data-ru="(по запросу)" data-en="(on request)">(по запросу)</span></span></li>`).join('')}
                 </ul>
               </div>` : ''}
             </aside>
@@ -356,6 +393,15 @@
             ${prev ? `<a href="case.html?project=${prev.id}" data-ru="← ${escapeHtml(t(prev.title))}" data-en="← ${escapeHtml(t(prev.title))}">← ${escapeHtml(t(prev.title))}</a>` : '<span></span>'}
             ${next ? `<a href="case.html?project=${next.id}" data-ru="${escapeHtml(t(next.title))} →" data-en="${escapeHtml(t(next.title))} →">${escapeHtml(t(next.title))} →</a>` : '<span></span>'}
           </nav>
+          <div class="holo clip-lg ring" style="margin-top:2.4rem">
+            <p class="kicker" data-ru="дальше" data-en="next">дальше</p>
+            <h3 data-ru="Похожая задача?" data-en="A similar problem?">Похожая задача?</h3>
+            <p class="lede" data-ru="Опишите её в двух абзацах — скажу, реально ли это, сколько примерно займёт и что я бы сделала первым шагом." data-en="Describe it in two paragraphs — I will tell you whether it is realistic, roughly how long it takes, and what I would do first.">Опишите её в двух абзацах — скажу, реально ли это, сколько примерно займёт и что я бы сделала первым шагом.</p>
+            <div class="hero-cta" style="margin-top:1.2rem">
+              <a class="btn btn-primary" href="contact.html" data-ru="описать задачу" data-en="describe your task"><span>описать задачу</span></a>
+              <a class="btn" href="services.html" data-ru="услуги и цены" data-en="services and prices"><span>услуги и цены</span></a>
+            </div>
+          </div>
         </div>
       </section>`;
   }

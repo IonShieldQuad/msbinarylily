@@ -1,0 +1,56 @@
+[
+  {
+    "id": "tg-aggregator",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\tg-aggregator\\pipeline-overview.png",
+    "kind": "readme",
+    "source": "H:/Work/tg-aggregator/README.md"
+  },
+  {
+    "id": "ai-agents-automation",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\ai-agents-automation\\service-readme.png",
+    "kind": "readme",
+    "source": "H:/Work/parser/README.md"
+  },
+  {
+    "id": "lilys-innovations",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\lilys-innovations\\repository.png",
+    "kind": "github",
+    "source": "https://github.com/IonShieldQuad/lilys-innovations",
+    "title": "GitHub - IonShieldQuad/lilys-innovations · GitHub"
+  },
+  {
+    "id": "android-apps",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\android-apps\\planner-repository.png",
+    "kind": "github",
+    "source": "https://github.com/IonShieldQuad/Planner",
+    "title": "GitHub - IonShieldQuad/Planner: An application to make planning daily trips easier · GitHub"
+  },
+  {
+    "id": "compiler-translator",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\compiler-translator\\analyzer-repository.png",
+    "kind": "github",
+    "source": "https://github.com/IonShieldQuad/Analyzer",
+    "title": "GitHub - IonShieldQuad/Analyzer · GitHub"
+  },
+  {
+    "id": "neural-net-from-scratch",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\neural-net-from-scratch\\evasion-learning-repository.png",
+    "kind": "github",
+    "source": "https://github.com/IonShieldQuad/Evasion-learning",
+    "title": "GitHub - IonShieldQuad/Evasion-learning: A simple machine learning algorithm to dodge falling blocks · GitHub"
+  },
+  {
+    "id": "compression-algorithms",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\compression-algorithms\\compressor-repository.png",
+    "kind": "github",
+    "source": "https://github.com/IonShieldQuad/Compressor-2",
+    "title": "GitHub - IonShieldQuad/Compressor-2: File compressor implementing Huffman and Arithmetic encodings · GitHub"
+  },
+  {
+    "id": "sorting-visualizer",
+    "file": "H:\\Work\\msbinarylily\\assets\\cases\\sorting-visualizer\\sorting-repository.png",
+    "kind": "github",
+    "source": "https://github.com/IonShieldQuad/Sorting-algorithms",
+    "title": "GitHub - IonShieldQuad/Sorting-algorithms: A project of page with with different sorting algorithms visualised · GitHub"
+  }
+]

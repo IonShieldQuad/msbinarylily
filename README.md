@@ -23,12 +23,44 @@ js/site.js          manifest rendering, RU/EN toggle, filters, case metadata
 js/ambient.js       the seam-graph ambience engine (hero + laboratory)
 js/lead-form.js     contact form wiring (hidden until site-config.js has a relay)
 assets/emblem.svg   brand emblem (flower of data-streams on a chip)
+assets/cases/       per-case screenshots, one folder per case id, plus
+                    manifest.json — the asset registry the generator merges
 scripts/generate.py vault cases/*.md  →  data/cases.json + data/cases.js
 scripts/verify.cjs  real-browser check of every page (errors, DOM, screenshots)
+scripts/capture-cases.cjs   re-capture the case screenshots into assets/cases/
+scripts/case-breakpoints.cjs  mobile/tablet/desktop layout proof
+scripts/case-nav.cjs        every case reachable from the index and back
+scripts/fix-external-links.py  one-off: target="_blank" on every external link
 data/cases.json     GENERATED — do not hand-edit
 data/cases.js       GENERATED — same payload as `window.MBL_CASES` so the pages
                     also work from file:// (no web server, no CORS)
 shots/              verification screenshots (git-ignored)
+```
+
+## Case visuals (screenshots and artefacts)
+
+Screenshots live in the site repo, not the vault: `assets/cases/<case-id>/<name>.png`.
+`assets/cases/manifest.json` is the registry — for each case it lists `thumb` and
+`figures[{file, type, alt{ru,en}, caption{ru,en}}]`. `scripts/generate.py` merges
+that into the manifest as `visuals` (rendered as `<figure>` with alt + caption) and
+`thumb` (the index card image). Nothing in the vault has to change for an image to
+appear.
+
+A figure is **dropped with a warning** when its file is missing or its alt text is
+empty, so a broken image or an undescribed one never ships. A case with no visual
+gets a warning too: the evidence gate wants one visual per published case.
+
+Wiring an image through the vault is also supported: a `## Visuals` section with
+either markdown image lines (`![alt](assets/cases/<id>/file.png "caption")`) or the
+`[[SCREENSHOT: …]]` placeholders the copy pass leaves behind. Placeholders are
+matched to that case's manifest figures **in order**, and an unmatched placeholder
+is reported by name at build time rather than silently rendering nothing.
+
+```
+python scripts/generate.py                       # merge visuals into the manifest
+NODE_PATH=... node scripts/capture-cases.cjs     # re-capture from the repos/apps
+NODE_PATH=... node scripts/case-breakpoints.cjs  # 360 / 768 / 1440 layout proof
+NODE_PATH=... node scripts/case-nav.cjs          # every case reachable, pager works
 ```
 
 ## Regenerate the content

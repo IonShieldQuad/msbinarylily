@@ -31,6 +31,9 @@ DEFAULT_SOURCE = Path(
     r"H:\ObsidianVaultCentral\Work\Personal\portfolio-site\cases"
 )
 DEFAULT_OUT = Path(__file__).resolve().parent.parent / "data"
+# screenshots live in the site repo, not the vault: assets/cases/<case-id>/<file>.png
+# plus assets/cases/manifest.json describing them (file, type, alt, caption).
+DEFAULT_ASSETS = Path(__file__).resolve().parent.parent / "assets" / "cases"
 
 THEMES = {
     "ai", "lowlevel", "algorithms", "modding", "industrial",
@@ -47,10 +50,17 @@ SECTION_MAP = [
     ("Timeline", "timeline", True),
     ("Impact / Metrics", "impact", False),
     ("Evidence", "evidence", False),
+    ("Visuals", "visuals", False),
     ("Technical deep-dive", "deepDive", False),
     ("Lessons learned", "lessons", False),
     ("Related", "related", False),
 ]
+
+# sections whose content is parsed, not copied into a text field
+PARSED_SECTIONS = {"stack", "evidence", "visuals"}
+
+PLACEHOLDER = re.compile(r"\[\[\s*SCREENSHOT:\s*(.*?)\s*\]\]", re.IGNORECASE | re.DOTALL)
+MD_IMAGE = re.compile(r"!\[([^\]]*)\]\(\s*([^)\s]+)\s*(?:\"([^\"]*)\")?\s*\)")
 
 FRONTMATTER_REQUIRED = ["case-title", "case-theme", "case-order", "featured"]
 
@@ -161,6 +171,136 @@ def evidence_links(text: str) -> list[dict]:
     return links
 
 
+ASSET_TYPES = {"screenshot", "document", "artefact", "diagram"}
+
+
+def load_assets(assets_dir: Path) -> tuple[dict, list[str], list[str]]:
+    """Read assets/cases/manifest.json -> {case_id: {thumb, figures}}, errors, warnings.
+
+    A figure whose file is missing or whose alt text is empty is dropped rather
+    than shipped: a broken image and an image nobody can describe are both worse
+    than a case with one visual fewer, and both are reported.
+    """
+    out: dict[str, dict] = {}
+    errors: list[str] = []
+    warnings: list[str] = []
+    manifest_path = assets_dir / "manifest.json"
+    if not manifest_path.is_file():
+        return out, [], [f"no asset manifest at {manifest_path.as_posix()} — cases ship without visuals"]
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return out, [f"assets/cases/manifest.json: invalid JSON — {exc}"], []
+
+    for case_id, entry in (data.get("cases") or {}).items():
+        visuals: list[dict] = []
+        for fig in entry.get("figures") or []:
+            rel = str(fig.get("file") or "").strip()
+            alt = fig.get("alt") or {}
+            caption = fig.get("caption") or {}
+            if not rel:
+                warnings.append(f"assets/{case_id}: figure without a 'file' — dropped")
+                continue
+            if not (assets_dir / rel).is_file():
+                warnings.append(f"assets/{case_id}: '{rel}' not found under assets/cases — figure dropped")
+                continue
+            alt_en = str(alt.get("en") or "").strip()
+            alt_ru = str(alt.get("ru") or "").strip()
+            if not (alt_en or alt_ru):
+                warnings.append(f"assets/{case_id}: '{rel}' has no alt text — figure dropped")
+                continue
+            kind = str(fig.get("type") or "screenshot").strip()
+            if kind not in ASSET_TYPES:
+                warnings.append(f"assets/{case_id}: '{rel}' has unknown type '{kind}' — treated as screenshot")
+                kind = "screenshot"
+            visuals.append({
+                "src": f"assets/cases/{rel}",
+                "type": kind,
+                "alt": {"ru": alt_ru or alt_en, "en": alt_en or alt_ru},
+                "caption": {
+                    "ru": str(caption.get("ru") or "").strip() or str(caption.get("en") or "").strip(),
+                    "en": str(caption.get("en") or "").strip() or str(caption.get("ru") or "").strip(),
+                },
+            })
+
+        thumb = str(entry.get("thumb") or "").strip()
+        if thumb and not (assets_dir / thumb).is_file():
+            warnings.append(f"assets/{case_id}: thumb '{thumb}' not found — falling back to the first figure")
+            thumb = ""
+        if thumb:
+            out.setdefault(case_id, {})["thumb"] = f"assets/cases/{thumb}"
+        if visuals:
+            block = out.setdefault(case_id, {})
+            block["visuals"] = visuals
+            block.setdefault("thumb", visuals[0]["src"])
+
+    return out, errors, warnings
+
+
+def resolve_visuals(case_id: str, section: str, assets: list[dict]) -> tuple[list[dict], list[str]]:
+    """Map a case's `## Visuals` section onto the asset manifest for that case.
+
+    Two ways the section can name an image, and both are wired through the vault:
+      - an explicit markdown image line `![alt](assets/cases/<id>/file.png "caption")`
+      - the `[[SCREENSHOT: …]]` placeholder the copy pass leaves behind, which is
+        matched to the case's manifest figures in order
+    With neither, the case shows every figure the manifest has for it. The manifest
+    owns the bilingual alt text and caption, so a single-language markdown alt is a
+    fallback, not the norm.
+    """
+    warnings: list[str] = []
+    by_src = {f["src"]: f for f in assets}
+    images = MD_IMAGE.findall(section or "")
+    placeholders = PLACEHOLDER.findall(section or "")
+    visuals: list[dict] = []
+
+    def from_parts(src: str, alt: str, caption: str) -> dict | None:
+        src = src.strip().lstrip("./")
+        if not src.startswith("assets/cases/"):
+            warnings.append(f"{case_id}: visual '{src}' is not under assets/cases/ — dropped")
+            return None
+        if src in by_src:
+            return dict(by_src[src])
+        # not in the manifest: keep the single-language text rather than losing the image
+        def pair(text: str) -> dict:
+            half = [p.strip() for p in text.split("|")]
+            return {"en": half[0] if half else "", "ru": half[1] if len(half) > 1 else (half[0] if half else "")}
+        warnings.append(f"{case_id}: visual '{src}' has no entry in assets/cases/manifest.json (single-language alt)")
+        return {"src": src, "type": "screenshot", "alt": pair(alt), "caption": pair(caption)}
+
+    if images:
+        for alt, src, title in images:
+            fig = from_parts(src, alt, title)
+            if fig:
+                visuals.append(fig)
+        if len(images) < len(placeholders):
+            warnings.append(f"{case_id}: {len(placeholders)} placeholders but only {len(images)} image line(s)")
+    elif placeholders and assets:
+        for i, text in enumerate(placeholders):
+            if i < len(assets):
+                visuals.append(dict(assets[i]))
+            else:
+                warnings.append(
+                    f"{case_id}: placeholder '{text[:60]}' has no matching asset in the manifest — "
+                    "add the image or drop the placeholder"
+                )
+        if len(assets) > len(placeholders):
+            for extra in assets[len(placeholders):]:
+                visuals.append(dict(extra))
+                warnings.append(f"{case_id}: asset '{extra['src']}' is not referenced by any placeholder — appended")
+    else:
+        visuals = [dict(a) for a in assets]
+
+    seen: set[str] = set()
+    unique = []
+    for fig in visuals:
+        if fig["src"] in seen:
+            continue
+        seen.add(fig["src"])
+        unique.append(fig)
+    return unique, warnings
+
+
 def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
     """-> (case dict, errors, warnings)
 
@@ -203,11 +343,16 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
     for heading, field, required in SECTION_MAP:
         content = found.get(heading)
         if content is None or not content.strip():
+            # `## Visuals` is optional in the case markdown: the asset manifest can
+            # carry the images on its own, and build() warns when a case ends up
+            # with none at all
+            if field == "visuals":
+                continue
             (errors if required else warnings).append(
                 f"{path.name}: {'missing required' if required else 'no'} section '## {heading}'"
             )
             continue
-        if field in ("stack", "evidence"):
+        if field in PARSED_SECTIONS:
             continue
         en_text = delink(content).strip()
         ru_source = (ru_found.get(heading) or "").strip()
@@ -256,6 +401,9 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
             "translation": {"ru": "source" if src == "ru" else (ru_status if ru_found else "missing"),
                             "en": "source" if src == "en" else "missing"},
             **fields,
+            # the raw `## Visuals` section: resolve_visuals() maps it onto the asset
+            # manifest once the manifest is loaded (it needs the case id)
+            "_visualsSection": found.get("Visuals") or "",
             "updated": str(fm.get("updated", "")),
         },
         errors,
@@ -267,7 +415,7 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
 # main
 # --------------------------------------------------------------------------- #
 
-def build(source: Path) -> tuple[dict, list[str], list[str]]:
+def build(source: Path, assets_dir: Path) -> tuple[dict, list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
     files = sorted(source.glob("*.md"))  # non-recursive: cases/ru/*.md is never a case
@@ -281,6 +429,26 @@ def build(source: Path) -> tuple[dict, list[str], list[str]]:
         warnings += warns
         if not errs:
             cases.append(case)
+
+    assets, asset_errors, asset_warnings = load_assets(assets_dir)
+    errors += asset_errors
+    warnings += asset_warnings
+    known = {c["id"] for c in cases}
+    for stray in sorted(set(assets) - known):
+        warnings.append(f"assets/cases/manifest.json: '{stray}' is not a case id — ignored")
+    for case in cases:
+        block = assets.get(case["id"], {})
+        # always present, so a page never has to guess: an empty list means the
+        # case genuinely has no visual yet
+        visuals, visual_warnings = resolve_visuals(
+            case["id"], case.pop("_visualsSection", ""), block.get("visuals", []))
+        warnings += visual_warnings
+        case["visuals"] = visuals
+        case["thumb"] = block.get("thumb") or (visuals[0]["src"] if visuals else None)
+        if not visuals:
+            warnings.append(
+                f"{case['id']}: no visual — add a screenshot to assets/cases/manifest.json "
+                "(the evidence gate needs one visual per case)")
 
     cases.sort(key=lambda c: (c["order"], c["id"]))
     seen_order: dict[int, str] = {}
@@ -327,6 +495,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Generate the portfolio case manifest from the vault.")
     ap.add_argument("--source", type=Path, default=DEFAULT_SOURCE, help="vault cases/ directory")
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT, help="site data/ directory")
+    ap.add_argument("--assets", type=Path, default=DEFAULT_ASSETS,
+                    help="site assets/cases/ directory (manifest.json + images)")
     ap.add_argument("--check", action="store_true", help="validate only, write nothing")
     args = ap.parse_args(argv)
 
@@ -334,7 +504,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR source directory not found: {args.source}", file=sys.stderr)
         return 2
 
-    manifest, errors, warnings = build(args.source)
+    manifest, errors, warnings = build(args.source, args.assets)
 
     for w in warnings:
         print(f"warn  {w}", file=sys.stderr)
