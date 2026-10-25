@@ -381,9 +381,13 @@
               <div>
                 <p class="kicker">evidence</p>
                 <ul class="evidence">
-                  ${c.evidence.map((e) => e.url
-                    ? `<li><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(e.titled && e.label ? e.label : e.url.replace(/^https?:\/\//, ''))}</a></li>`
-                    : `<li><span class="empty-state">${escapeHtml(e.label)} <span data-ru="(по запросу)" data-en="(on request)">(по запросу)</span></span></li>`).join('')}
+                  ${c.evidence.map((e) => {
+                    if (!e.url) {
+                      return `<li><span class="empty-state">${escapeHtml(t(e.label))} <span data-ru="(по запросу)" data-en="(on request)">(по запросу)</span></span></li>`;
+                    }
+                    const text = e.titled && e.label ? t(e.label) : e.url.replace(/^https?:\/\//, '');
+                    return `<li><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a></li>`;
+                  }).join('')}
                 </ul>
               </div>` : ''}
             </aside>

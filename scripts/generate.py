@@ -382,6 +382,14 @@ def to_manifest_case(path: Path) -> tuple[dict, list[str], list[str]]:
         errors.append(f"{path.name}: '## Stack' produced no chips")
 
     evidence = evidence_links(found.get("Evidence", "")) if found.get("Evidence") else []
+    # a titled evidence link is copy, so it carries both languages; the RU note's
+    # own wording wins where it exists, and a bare URL (a host) stays neutral
+    ru_evidence = evidence_links(ru_found.get("Evidence", "")) if ru_found.get("Evidence") else []
+    ru_labels = {e["url"]: e["label"] for e in ru_evidence if e.get("url") and e.get("titled")}
+    for entry in evidence:
+        if not entry.get("titled"):
+            continue
+        entry["label"] = {"ru": ru_labels.get(entry["url"]) or entry["label"], "en": entry["label"]}
     if not evidence:
         warnings.append(f"{path.name}: no evidence links (repo/site/metric)")
     if "impact" not in fields:

@@ -30,7 +30,10 @@ window.MBL_CASES = {
       "evidence": [
         {
           "url": "https://ionshieldquad.github.io/msbinarylily/tg-aggregator-architecture.html",
-          "label": "TG Aggregator — architecture, AI contract, rate limits",
+          "label": {
+            "ru": "TG Aggregator — архитектура, контракт AI, лимиты",
+            "en": "TG Aggregator — architecture, AI contract, rate limits"
+          },
           "titled": true
         },
         {
@@ -162,12 +165,18 @@ window.MBL_CASES = {
       "evidence": [
         {
           "url": "https://ionshieldquad.github.io/msbinarylily/tg-aggregator-architecture.html",
-          "label": "TG Aggregator — architecture, AI contract, rate limits",
+          "label": {
+            "ru": "TG Aggregator — архитектура, контракт AI, лимиты",
+            "en": "TG Aggregator — architecture, AI contract, rate limits"
+          },
           "titled": true
         },
         {
           "url": "https://ionshieldquad.github.io/msbinarylily/case.html?project=tg-aggregator",
-          "label": "TG Aggregator — the pipeline this practice is built on",
+          "label": {
+            "ru": "TG Aggregator — пайплайн, на котором построена эта практика",
+            "en": "TG Aggregator — the pipeline this practice is built on"
+          },
           "titled": true
         },
         {
@@ -487,7 +496,10 @@ window.MBL_CASES = {
         },
         {
           "url": "https://github.com/IonShieldQuad/Analyzer/blob/master/generated.txt",
-          "label": "generated.txt — the PL/1 the compiler emitted",
+          "label": {
+            "ru": "generated.txt — PL/1, который выдал компилятор",
+            "en": "generated.txt — the PL/1 the compiler emitted"
+          },
           "titled": true
         }
       ],
@@ -675,7 +687,10 @@ window.MBL_CASES = {
       "evidence": [
         {
           "url": "https://ionshieldquad.github.io/msbinarylily/symphony-cpu.html",
-          "label": "Symphony — the instruction set and the programs that ran on it",
+          "label": {
+            "ru": "Symphony — система команд и программы, работающие на процессоре",
+            "en": "Symphony — the instruction set and the programs that ran on it"
+          },
           "titled": true
         }
       ],
