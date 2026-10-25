@@ -39,6 +39,10 @@ const pages = [
   ['case-compression', 'case.html?project=compression-algorithms', 'ru-RU', 'ru'],
   ['case-sorting', 'case.html?project=sorting-visualizer', 'ru-RU', 'ru'],
   ['case-missing', 'case.html?project=does-not-exist', 'ru-RU', 'ru'],
+  // the technical appendices are the public artefact two cases cite as evidence,
+  // so they get the same gate as any other page
+  ['appendix-symphony', 'symphony-cpu.html', 'ru-RU', 'ru'],
+  ['appendix-tg', 'tg-aggregator-architecture.html', 'ru-RU', 'ru'],
   ['index-static', 'index.html?static', 'ru-RU', 'ru'],
   ['index-en-browser', 'index.html', 'en-US', 'en'],
 ];
@@ -218,8 +222,20 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
       // markdown markers must never reach a surface that renders plain text
       literalMd: (document.body.innerText.match(/\*\*[^*\n]{0,40}\*\*/g) || []).slice(0, 4),
       // internal process vocabulary has no place in client-facing copy ("Arctic Code
-      // Vault Contributor" is a real GitHub badge, so that one phrase is allowed)
-      vocabulary: (document.body.innerText.match(/\bADR\b|(?<!Arctic Code )\bvault\b|премортем|pre-mortem|vanilla static site|SemVer/gi) || []).slice(0, 4),
+      // Vault Contributor" is a real GitHub badge, so that one phrase is allowed).
+      // Code spans are exempt: a published instruction set says `[%adr]`, and that
+      // mnemonic is machine text, not copy — the rule is about prose.
+      vocabulary: (() => {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        let prose = '';
+        let n;
+        while ((n = walker.nextNode())) {
+          const el = n.parentElement;
+          if (!el || !el.offsetParent || el.closest('script,style,code,pre,samp')) continue;
+          prose += ' ' + n.textContent;
+        }
+        return (prose.match(/\bADR\b|(?<!Arctic Code )\bvault\b|премортем|pre-mortem|vanilla static site|SemVer/gi) || []).slice(0, 4);
+      })(),
       // the type floor (>=12px) is a standing UI constraint, so it is a test
       smallText: (() => {
         const out = [];

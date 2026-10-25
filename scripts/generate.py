@@ -120,6 +120,7 @@ def sections(body: str) -> dict[str, str]:
 
 WIKILINK = re.compile(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]")
 URL = re.compile(r"https?://[^\s`)\]<>]+")
+MD_LINK = re.compile(r"\[([^\]\n]+)\]\((https?://[^\s)]+)\)")
 BARE_URL = re.compile(r"(?<![\w/.])((?:www\.)?(?:github\.com|gitlab\.com|t\.me|[a-z0-9-]+\.(?:pro|dev|io|ru|com|net|org))/[^\s`)\]<>|,]+)")
 
 
@@ -149,25 +150,40 @@ def body_lang(text: str) -> str:
 
 
 def evidence_links(text: str) -> list[dict]:
+    """Collect the evidence items in the order the author wrote them.
+
+    A markdown link carries the words the reader should see; a bare URL only
+    carries itself. Both are evidence, so they are gathered with their offsets and
+    sorted, instead of one kind being appended after the other.
+    """
+    md_spans = [(m.start(), m.end()) for m in MD_LINK.finditer(text)]
+
+    def inside_md_link(pos: int) -> bool:
+        return any(a <= pos < b for a, b in md_spans)
+
+    found: list[tuple[int, str, str, bool]] = []
+    for m in MD_LINK.finditer(text):
+        found.append((m.start(), m.group(2).rstrip(".,;)"), m.group(1).strip(), True))
+    for m in URL.finditer(text):
+        if inside_md_link(m.start()):
+            continue
+        url = m.group(0).rstrip(".,;)")
+        found.append((m.start(), url, url.split("//")[-1].split("/")[0], False))
+    for m in BARE_URL.finditer(text):
+        if inside_md_link(m.start()):
+            continue
+        found.append((m.start(), "https://" + m.group(1), m.group(1).split("/")[0], False))
+    for m in WIKILINK.finditer(text):  # [[related-note|Label]] references
+        found.append((m.start(), "", (m.group(2) or m.group(1)).strip(), False))
+
     links: list[dict] = []
     seen: set[str] = set()
-
-    def add(url: str, label: str) -> None:
-        url = url.rstrip(".,;)")
+    for _, url, label, titled in sorted(found, key=lambda t: t[0]):
         key = (url or label).lower()
         if not label or key in seen:
-            return
+            continue
         seen.add(key)
-        links.append({"url": url, "label": label})
-
-    for m in URL.finditer(text):
-        url = m.group(0)
-        add(url, url.split("//")[-1].split("/")[0])
-    for m in BARE_URL.finditer(text):
-        add("https://" + m.group(1), m.group(1).split("/")[0])
-    for line in text.splitlines():  # [[related-note]] style references
-        for label in re.findall(r"\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", line):
-            add("", (label[1] or label[0]).strip())
+        links.append({"url": url, "label": label, "titled": titled})
     return links
 
 

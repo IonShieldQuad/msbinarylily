@@ -18,6 +18,10 @@ laboratory.html     experiments (deliberately not full cases)
 services.html       three turnkey packages: price, who it suits, what is excluded,
                     what the next step is (see "Prices" below)
 contact.html        Telegram / GitHub / email + availability
+symphony-cpu.html   GENERATED — public appendix: the Symphony instruction set and
+                    its five programs (evidence for the CPU-from-NAND case)
+tg-aggregator-architecture.html  GENERATED — public appendix: the TG Aggregator
+                    specification, AI contract and rate-limit policy
 css/main.css        design system: tokens, components, responsive
 js/site.js          manifest rendering, RU/EN toggle, filters, case metadata
 js/ambient.js       the seam-graph ambience engine (hero + laboratory)
@@ -26,6 +30,8 @@ assets/emblem.svg   brand emblem (flower of data-streams on a chip)
 assets/cases/       per-case screenshots, one folder per case id, plus
                     manifest.json — the asset registry the generator merges
 scripts/generate.py vault cases/*.md  →  data/cases.json + data/cases.js
+scripts/build-appendix.py  renders the public technical appendices (Symphony ISA,
+                    TG Aggregator brief) from the vault specs into site pages
 scripts/verify.cjs  real-browser check of every page (errors, DOM, screenshots)
 scripts/capture-cases.cjs   re-capture the case screenshots into assets/cases/
 scripts/case-breakpoints.cjs  mobile/tablet/desktop layout proof

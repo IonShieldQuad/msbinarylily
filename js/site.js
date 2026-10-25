@@ -382,7 +382,7 @@
                 <p class="kicker">evidence</p>
                 <ul class="evidence">
                   ${c.evidence.map((e) => e.url
-                    ? `<li><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(e.url.replace(/^https?:\/\//, ''))}</a></li>`
+                    ? `<li><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(e.titled && e.label ? e.label : e.url.replace(/^https?:\/\//, ''))}</a></li>`
                     : `<li><span class="empty-state">${escapeHtml(e.label)} <span data-ru="(по запросу)" data-en="(on request)">(по запросу)</span></span></li>`).join('')}
                 </ul>
               </div>` : ''}

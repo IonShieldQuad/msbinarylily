@@ -621,6 +621,40 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
 }
 .prose h4 { font-family: var(--font-display); margin: 1.4rem 0 0.5rem; }
 
+/* -------------------------------------------------------------- appendices -- */
+/* The technical appendices publish the specification itself: tables of instruction
+   encodings and JSON fields, plus ASCII diagrams. They are reference documents, so
+   they run wider than 68ch (a table of 32-bit encodings does not fit a prose
+   measure) and every wide block scrolls inside its own box instead of pushing the
+   page sideways on a phone. */
+.prose-wide { max-width: 96ch; min-width: 0; }
+.prose-wide h2 {
+  font-family: var(--font-mono); font-size: 1.05rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim);
+  margin: 2.4rem 0 0.9rem; padding-top: 1rem; border-top: 1px solid var(--line);
+}
+.prose-wide h2:first-of-type { margin-top: 0.6rem; }
+.prose-wide h3 { margin-top: 1.8rem; }
+.prose .table-wrap { overflow-x: auto; margin: 0 0 1.2rem; min-width: 0; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.875rem; line-height: 1.45; }
+.prose th, .prose td { text-align: left; padding: 0.45rem 0.65rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.prose th {
+  font-family: var(--font-mono); font-size: 0.78rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim);
+  white-space: nowrap;
+}
+.prose td code, .prose th code { white-space: nowrap; }
+.prose pre {
+  overflow-x: auto; margin: 0 0 1.2rem; padding: 0.85rem 1rem;
+  background: var(--carbon); color: var(--text-on-dark);
+  font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.45;
+}
+.prose pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+.appendix-contents { display: grid; gap: 0.4rem; margin: 1.4rem 0 0.6rem; }
+.appendix-contents .kicker { margin: 0; }
+.appendix-contents ol { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+.appendix-contents a { font-family: var(--font-mono); font-size: 0.84rem; }
+
 /* -------------------------------------------------------------- case page -- */
 .case-head { background: var(--carbon); color: var(--text-on-dark); padding-block: clamp(2rem, 5vw, 3.4rem); }
 /* the case head is a carbon band, so its children need the dark-surface tokens —

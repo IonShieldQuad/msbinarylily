@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru" data-title-ru="Symphony — система команд и программы" data-title-en="Symphony — instruction set and programs" data-desc-ru="Полный набор инструкций процессора Symphony: кодировки, регистры, переходы и память, плюс пять программ на его ассемблере." data-desc-en="The complete Symphony CPU instruction set — encodings, registers, jumps and memory — plus the five programs written in its assembly.">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Symphony — система команд и программы</title>
+<meta name="description" content="Полный набор инструкций процессора Symphony: кодировки, регистры, переходы и память, плюс пять программ на его ассемблере.">
+<link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#0b0c10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-ru="к содержимому" data-en="skip to content">к содержимому</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22.22 10.95 L16.95 3.43 L7.8 4.48 L7.8 4.98 L15.45 6.02 L18.58 13.05 Z" fill="#2fb8ff"/><circle cx="20.4" cy="12" r="2.7" fill="#2fb8ff"/><path d="M1.78 13.05 L7.05 20.57 L16.2 19.52 L16.2 19.02 L8.55 17.98 L5.42 10.95 Z" fill="#ff7059"/><circle cx="3.6" cy="12" r="2.7" fill="#ff7059"/><circle cx="12" cy="12" r="1.7" fill="#c2ccdb"/></svg>
+      <span class="brand-name">Ms<b>Binary</b>Lily</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span data-ru="меню" data-en="menu">меню</span>
+    </button>
+    <nav class="nav" id="site-nav" aria-label="Main">
+      <a href="index.html" data-ru="главная" data-en="home">главная</a>
+      <a href="projects.html" data-ru="проекты" data-en="projects">проекты</a>
+      <a href="services.html" data-ru="услуги" data-en="services">услуги</a>
+      <a href="laboratory.html" data-ru="лаборатория" data-en="laboratory">лаборатория</a>
+      <a href="about.html" data-ru="обо мне" data-en="about">обо мне</a>
+      <a href="contact.html" data-ru="контакты" data-en="contact">контакты</a>
+      <span class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang-btn="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang-btn="en" aria-pressed="false">EN</button>
+      </span>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="section-panel">
+    <div class="wrap">
+      <p class="kicker" data-ru="приложение к кейсу · CPU from NAND" data-en="case appendix · CPU from NAND">приложение к кейсу · CPU from NAND</p>
+      <h1 class="page-title" data-ru="Symphony — система команд и программы" data-en="Symphony — instruction set and programs">Symphony — система команд и программы</h1>
+      <p class="lede" data-ru="Процессор Symphony собран снизу вверх — от одного NAND-вентиля до 32-битной системы команд. Здесь она целиком: кодировки, регистры, переходы, работа с памятью и пять программ, написанных на её ассемблере и прогнанных на самом процессоре." data-en="The Symphony CPU was built bottom-up, from a single NAND gate to a 32-bit instruction set. Here is that instruction set in full: encodings, registers, jumps, memory access, and the five programs written in its assembly and run on the machine itself.">Процессор Symphony собран снизу вверх — от одного NAND-вентиля до 32-битной системы команд. Здесь она целиком: кодировки, регистры, переходы, работа с памятью и пять программ, написанных на её ассемблере и прогнанных на самом процессоре.</p>
+
+      <div class="case-body" style="margin-top:2.2rem">
+        <div class="prose prose-wide">
+          <p class="footer-meta" data-ru="Исходный технический документ, поэтому ниже он на английском. Публичного репозитория нет: процессор существует внутри игры Turing Complete как схема, а не как код. Схему и запись прогона можно показать по запросу." data-en="This is the original technical document, so it stays in English throughout. There is no public repository: the CPU exists as a circuit inside the game Turing Complete, not as a codebase. The schematic and a run can be shown on request.">Исходный технический документ, поэтому ниже он на английском. Публичного репозитория нет: процессор существует внутри игры Turing Complete как схема, а не как код. Схему и запись прогона можно показать по запросу.</p>
+          <nav class="appendix-contents" aria-label="Contents">
+            <p class="kicker" data-ru="содержание" data-en="contents">содержание</p>
+            <ol>
+            <li><a href="#symphony-isa">Symphony ISA</a></li>
+            <li><a href="#symphony-programs">Symphony Programs</a></li>
+            </ol>
+          </nav>
+<h2 id="symphony-isa">Symphony ISA</h2>
+<h3>Registers</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Register</th>
+<th style="text-align: center;">Code</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>zr</code></td>
+<td style="text-align: center;">0000</td>
+<td>Zero (always 0)</td>
+</tr>
+<tr>
+<td><code>r1</code>–<code>r9</code></td>
+<td style="text-align: center;">0001–1001</td>
+<td>General purpose</td>
+</tr>
+<tr>
+<td><code>r10</code>–<code>r13</code></td>
+<td style="text-align: center;">1010–1101</td>
+<td>General purpose</td>
+</tr>
+<tr>
+<td><code>sp</code></td>
+<td style="text-align: center;">1110</td>
+<td>Stack pointer</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td style="text-align: center;">1111</td>
+<td>Comparison results</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Instruction encodings</h3>
+<p><code>a</code>, <code>b</code>, <code>c</code> = register fields (4 bits each). <code>aaaa</code>/<code>bbbb</code>/<code>cccc</code> = the same fields in the 32-bit layout. <code>U16</code> = 16-bit immediate. <code>label</code> = label resolvable to a U16 immediate.</p>
+<h4>I/O</h4>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Encoding</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nop</code></td>
+<td><code>00000000 00000000 00000000 00000000</code></td>
+<td>Does nothing</td>
+</tr>
+<tr>
+<td><code>in %a</code></td>
+<td><code>00000001 aaaa0000 00000000 00000000</code></td>
+<td>Load input into <code>%a</code></td>
+</tr>
+<tr>
+<td><code>out %a</code></td>
+<td><code>00000010 00000000 0000aaaa 00000000</code></td>
+<td>Send <code>%a</code> to output</td>
+</tr>
+<tr>
+<td><code>out %a:U16</code></td>
+<td><code>00010010 00000000 aaaaaaaa aaaaaaaa</code></td>
+<td>Send immediate to output</td>
+</tr>
+<tr>
+<td><code>keyboard %a</code></td>
+<td><code>00000011 aaaa0000 00000000 00000000</code></td>
+<td>Load keyboard input into <code>%a</code></td>
+</tr>
+<tr>
+<td><code>screen %a, %b</code></td>
+<td><code>00000100 0000aaaa 0000bbbb 00000000</code></td>
+<td>Set screen setting <code>%a</code> to value <code>%b</code></td>
+</tr>
+<tr>
+<td><code>screen %a, %b:U16</code></td>
+<td><code>00010100 0000aaaa bbbbbbbb bbbbbbbb</code></td>
+<td>Set screen setting <code>%a</code> to immediate</td>
+</tr>
+<tr>
+<td><code>time_0 %a</code></td>
+<td><code>00000101 aaaa0000 00000000 00000000</code></td>
+<td>Lower 4 bytes of time into <code>%a</code></td>
+</tr>
+<tr>
+<td><code>time_1 %a</code></td>
+<td><code>00000110 aaaa0000 00000000 00000000</code></td>
+<td>Upper 4 bytes of time into <code>%a</code></td>
+</tr>
+<tr>
+<td><code>counter %a</code></td>
+<td><code>00000111 aaaa0000 00000000 00000000</code></td>
+<td>Load counter value into <code>%a</code></td>
+</tr>
+</tbody>
+</table></div>
+<h4>ALU (register operands)</h4>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Encoding</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nand %a, %b, %c</code></td>
+<td><code>00100000 aaaabbbb 0000cccc 00000000</code></td>
+<td><code>%a = %b NAND %c</code></td>
+</tr>
+<tr>
+<td><code>or %a, %b, %c</code></td>
+<td><code>00100001 aaaabbbb 0000cccc 00000000</code></td>
+<td><code>%a = %b OR %c</code></td>
+</tr>
+<tr>
+<td><code>and %a, %b, %c</code></td>
+<td><code>00100010 aaaabbbb 0000cccc 00000000</code></td>
+<td><code>%a = %b AND %c</code></td>
+</tr>
+<tr>
+<td><code>nor %a, %b, %c</code></td>
+<td><code>00100011 aaaabbbb 0000cccc 00000000</code></td>
+<td><code>%a = %b NOR %c</code></td>
+</tr>
+<tr>
+<td><code>add %a, %b, %c</code></td>
+<td><code>00100100 aaaabbbb 0000cccc 00000000</code></td>
+<td><code>%a = %b + %c</code></td>
+</tr>
+<tr>
+<td><code>sub %a, %b, %c</code></td>
+<td><code>00100101 aaaabbbb 0000cccc 00000000</code></td>
+<td><code>%a = %b − %c</code></td>
+</tr>
+<tr>
+<td><code>xor %a, %b, %c</code></td>
+<td><code>00100110 aaaabbbb 0000cccc 00000000</code></td>
+<td><code>%a = %b XOR %c</code></td>
+</tr>
+<tr>
+<td><code>lsl %a, %b, %c</code></td>
+<td><code>00100111 aaaabbbb 0000cccc 00000000</code></td>
+<td>Logical shift left</td>
+</tr>
+<tr>
+<td><code>lsr %a, %b, %c</code></td>
+<td><code>00101000 aaaabbbb 0000cccc 00000000</code></td>
+<td>Logical shift right</td>
+</tr>
+<tr>
+<td><code>asr %a, %b, %c</code></td>
+<td><code>00101001 aaaabbbb 0000cccc 00000000</code></td>
+<td>Arithmetic shift right</td>
+</tr>
+<tr>
+<td><code>cmp %a, %b</code></td>
+<td><code>00101010 1111aaaa 0000bbbb 00000000</code></td>
+<td>Compare → <code>flags</code></td>
+</tr>
+</tbody>
+</table></div>
+<h4>ALU (immediate / label operands)</h4>
+<p>Same operations with a 16-bit immediate <code>%c:U16</code>:</p>
+<p><code>00110000</code>–<code>00111001</code> (with the <code>U16</code> in the last two bytes):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Encoding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nand %a, %b, %c:U16</code></td>
+<td><code>00110000 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>or %a, %b, %c:U16</code></td>
+<td><code>00110001 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>and %a, %b, %c:U16</code></td>
+<td><code>00110010 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>nor %a, %b, %c:U16</code></td>
+<td><code>00110011 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>add %a, %b, %c:U16</code></td>
+<td><code>00110100 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>sub %a, %b, %c:U16</code></td>
+<td><code>00110101 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>xor %a, %b, %c:U16</code></td>
+<td><code>00110110 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>lsl %a, %b, %c:U16</code></td>
+<td><code>00110111 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>lsr %a, %b, %c:U16</code></td>
+<td><code>00111000 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>asr %a, %b, %c:U16</code></td>
+<td><code>00111001 aaaabbbb cccccccc cccccccc</code></td>
+</tr>
+<tr>
+<td><code>cmp %a, %b:U16</code></td>
+<td><code>00111010 1111aaaa bbbbbbbb bbbbbbbb</code></td>
+</tr>
+</tbody>
+</table></div>
+<h4>Control flow (jumps)</h4>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Encoding</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>jmp %a</code></td>
+<td><code>01001000 00001111 0000aaaa 00000000</code></td>
+<td>Unconditional (register)</td>
+</tr>
+<tr>
+<td><code>jmp %a:U16</code></td>
+<td><code>01011000 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Unconditional (immediate/label)</td>
+</tr>
+<tr>
+<td><code>je</code></td>
+<td><code>01010001 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Equal</td>
+</tr>
+<tr>
+<td><code>jne</code></td>
+<td><code>01011001 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Not equal</td>
+</tr>
+<tr>
+<td><code>jb</code></td>
+<td><code>01010010 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Below (unsigned)</td>
+</tr>
+<tr>
+<td><code>jae</code></td>
+<td><code>01011010 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Above or equal (unsigned)</td>
+</tr>
+<tr>
+<td><code>jbe</code></td>
+<td><code>01010011 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Below or equal (unsigned)</td>
+</tr>
+<tr>
+<td><code>ja</code></td>
+<td><code>01011011 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Above (unsigned)</td>
+</tr>
+<tr>
+<td><code>jl</code></td>
+<td><code>01010100 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Less (signed)</td>
+</tr>
+<tr>
+<td><code>jge</code></td>
+<td><code>01011100 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Greater or equal (signed)</td>
+</tr>
+<tr>
+<td><code>jle</code></td>
+<td><code>01010101 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Less or equal (signed)</td>
+</tr>
+<tr>
+<td><code>jg</code></td>
+<td><code>01011101 00001111 aaaaaaaa aaaaaaaa</code></td>
+<td>Greater (signed)</td>
+</tr>
+</tbody>
+</table></div>
+<p>All conditional jumps read results from the <code>flags</code> register (set by <code>cmp</code>). Signatures with <code>%a:U16(immediate | label)</code> accept labels.</p>
+<h4>Memory</h4>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Encoding</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>load_8 %dest, [%adr]</code></td>
+<td><code>01100000 dddd0000 0000aaaa 00000000</code></td>
+<td>Byte load</td>
+</tr>
+<tr>
+<td><code>load_8 %dest, [%adr:U16]</code></td>
+<td><code>01110000 dddd0000 aaaaaaaa aaaaaaaa</code></td>
+<td>Byte load (immediate addr)</td>
+</tr>
+<tr>
+<td><code>load_16 %dest, [%adr]</code></td>
+<td><code>01100001 dddd0000 0000aaaa 00000000</code></td>
+<td>Word load</td>
+</tr>
+<tr>
+<td><code>load_16 %dest, [%adr:U16]</code></td>
+<td><code>01110001 dddd0000 aaaaaaaa aaaaaaaa</code></td>
+<td>Word load (immediate addr)</td>
+</tr>
+<tr>
+<td><code>load_32 %dest, [%adr]</code></td>
+<td><code>01100010 dddd0000 0000aaaa 00000000</code></td>
+<td>Dword load</td>
+</tr>
+<tr>
+<td><code>load_32 %dest, [%adr:U16]</code></td>
+<td><code>01110010 dddd0000 aaaaaaaa aaaaaaaa</code></td>
+<td>Dword load (immediate addr)</td>
+</tr>
+<tr>
+<td><code>pload %dest, [%adr]</code></td>
+<td><code>01100011 dddd0000 0000aaaa 00000000</code></td>
+<td>Persistent memory load</td>
+</tr>
+<tr>
+<td><code>pload %dest, [%adr:U16]</code></td>
+<td><code>01110011 dddd0000 aaaaaaaa aaaaaaaa</code></td>
+<td>Persistent memory load (immediate addr)</td>
+</tr>
+<tr>
+<td><code>store_8 [%adr], %value</code></td>
+<td><code>01100100 0000vvvv 0000aaaa 00000000</code></td>
+<td>Byte store</td>
+</tr>
+<tr>
+<td><code>store_8 [%adr:U16], %value</code></td>
+<td><code>01110100 0000vvvv aaaaaaaa aaaaaaaa</code></td>
+<td>Byte store (immediate addr)</td>
+</tr>
+<tr>
+<td><code>store_16 [%adr], %value</code></td>
+<td><code>01100101 0000vvvv 0000aaaa 00000000</code></td>
+<td>Word store</td>
+</tr>
+<tr>
+<td><code>store_16 [%adr:U16], %value</code></td>
+<td><code>01110101 0000vvvv aaaaaaaa aaaaaaaa</code></td>
+<td>Word store (immediate addr)</td>
+</tr>
+<tr>
+<td><code>store_32 [%adr], %value</code></td>
+<td><code>01100110 0000vvvv 0000aaaa 00000000</code></td>
+<td>Dword store</td>
+</tr>
+<tr>
+<td><code>store_32 [%adr:U16], %value</code></td>
+<td><code>01110110 0000vvvv aaaaaaaa aaaaaaaa</code></td>
+<td>Dword store (immediate addr)</td>
+</tr>
+<tr>
+<td><code>pstore [%adr], %value</code></td>
+<td><code>01100111 0000vvvv 0000aaaa 00000000</code></td>
+<td>Persistent memory store</td>
+</tr>
+<tr>
+<td><code>pstore [%adr:U16], %value</code></td>
+<td><code>01110111 0000vvvv aaaaaaaa aaaaaaaa</code></td>
+<td>Persistent memory store (immediate addr)</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Design notes</h3>
+<ul>
+<li><strong>Fixed 32-bit instructions</strong>, 4-bit register fields, immediate variants sharing the opcode family (register <code>001xxxxx</code> vs immediate <code>0011xxxx</code> for ALU; <code>01xxxxxx</code> for memory).</li>
+<li><strong><code>flags</code> register</strong> written by <code>cmp</code>; 8 conditional jumps read it (signed vs unsigned comparison sets, plus equality).</li>
+<li><strong><code>sp</code></strong> is a general-purpose register used by convention as the stack pointer (see symphony programs — Hanoi uses <code>push</code>/<code>pop</code>/<code>call</code>/<code>ret</code>).</li>
+<li><strong>Persistent memory</strong> (<code>pload</code>/<code>pstore</code>) is non-volatile across the level — the RNG uses it to keep a seed.</li>
+</ul>
+<h2 id="symphony-programs">Symphony Programs</h2>
+<h3>Tower of Hanoi</h3>
+<p>Recursive solution using the stack: <code>push</code>/<code>pop</code> on <code>sp</code>, <code>call</code>/<code>ret</code> — the classic proof that the calling convention and stack work end-to-end. Uses <code>in</code> for N (number of disks), source, destination, and spare pegs; outputs each move followed by a <code>GRB</code> (grab) marker so the game engine executes them.</p>
+<pre><code class="language-asm">const NUM = r10
+const SRC = r11
+const DST = r12
+const SPR = r13
+const GRB = 5
+
+start:
+in NUM
+in SRC
+in DST
+in SPR
+
+call hanoi
+jmp start
+
+hanoi:
+
+cmp NUM, 0
+jne cnt
+out SRC
+out GRB
+out DST
+out GRB
+ret
+cnt:
+push NUM
+push SRC
+push DST
+push SPR
+
+mov r1, DST
+mov DST, SPR
+mov SPR, r1
+sub NUM, NUM, 1
+call hanoi
+
+pop SPR
+pop DST
+pop SRC
+pop NUM
+
+out SRC
+out GRB
+out DST
+out GRB
+
+push NUM
+push SRC
+push DST
+push SPR
+
+mov r1, SRC
+mov SRC, SPR
+mov SPR, r1
+sub NUM, NUM, 1
+call hanoi
+
+pop SPR
+pop DST
+pop SRC
+pop NUM
+
+ret
+</code></pre>
+<h3>Random Number Generator</h3>
+<p>A <strong>xorshift</strong> PRNG (shift amounts 13/17/5). The seed is persisted across runs via <code>pload</code>/<code>pstore</code> to persistent (non-volatile) memory at address 0 — so each run continues the sequence instead of repeating. Falls back to reading a fresh seed from input if the stored seed is zero.</p>
+<pre><code class="language-asm">pload r1, [0]
+cmp r1, zr
+jne cnt
+in r1
+cnt:
+call rng
+pstore [0], r1
+out r1
+
+jmp 0
+rng:
+
+push r2
+push r3
+push r4
+push r5
+push r6
+
+lsr r2, r1, 13
+xor r3, r2, r1
+lsl r4, r3, 17
+xor r5, r4, r3
+lsr r6, r5, 5
+xor r1, r6, r5
+
+pop r2
+pop r3
+pop r4
+pop r5
+pop r6
+
+ret
+
+out r7   ; note: trailing line from the original session; harmless dead code
+</code></pre>
+<h3>Letter Capitalizer</h3>
+<p>Capitalizes the first letter of each word. The key trick is the ASCII bit toggle: uppercase and lowercase letters differ by exactly one bit (<code>0b00100000</code>), so <code>xor r1, r1, 0b00100000</code> flips case in a single instruction. A small state machine (<code>r2</code> remembers whether we just saw a space) ensures only the first letter of a word is capitalized.</p>
+<pre><code class="language-asm">Capitalize:
+start:
+in r1
+
+cmp r1, 0b00100000
+jne cnt1
+mov r2, 0
+jmp out
+cnt1:
+cmp r2, 0
+jne out
+mov r2, 1
+xor r1, r1, 0b00100000
+
+out:
+out r1
+jmp start
+</code></pre>
+<h3>Sorting Algorithm</h3>
+<p>Reads 16 values into RAM at <code>0x0100</code>, sorts them <strong>in memory</strong> using <code>load_32</code>/<code>store_32</code>, then outputs the sorted list. Demonstrates addressing modes, immediate-address memory access, and the unsigned <code>jge</code>/<code>jle</code> comparison jumps. The inner loop is an insertion-sort variant that walks the window down and re-sorts on each new element.</p>
+<pre><code class="language-asm">Sorting:
+start:
+mov r1, 64
+inloop:
+in r3
+sub r1, r1, 4
+cmp r1, 0
+add r2, r1, 0x0100
+store_32 [r2], r3
+jg inloop
+
+mov r2, 0x013C
+
+sort:
+load_32 r4, [r2]
+sub r2, r2, 4
+load_32 r5, [r2]
+add r2, r2, 4
+
+cmp r4, r5
+jge cnt
+
+store_32 [r2], r5
+sub r2, r2, 4
+store_32 [r2], r4
+add r2, r2, 12
+cmp r2, 0x0140
+jle cnt
+mov r2, 0x0140
+cnt:
+sub r2, r2, 4
+cmp r2, 0x100
+jge sort
+
+mov r1, 0
+outloop:
+add r2, r1, 0x0100
+load_32 r3, [r2]
+out r3
+add r1, r1, 4
+cmp r1, 64
+jl outloop
+
+jmp start
+</code></pre>
+<h3>Game of Nim</h3>
+<p>Perfect-play strategy for Nim (take 1–3 cards). The key insight: <code>r1 % 4</code> via <code>and r3, r1, 3</code> (mod-4 on powers of two is a single bitwise AND). If <code>r1 % 4 == 1</code> you're in a losing position (take 1, the safe move); otherwise take <code>(r1 - 1) % 4</code> to restore the winning residue.</p>
+<pre><code class="language-asm">Nim:
+start:
+    in r1               ; read current number of cards
+    cmp r1, 0           ; if no cards left, opponent took the last card and lost
+    je end
+    and r3, r1, 3       ; r3 = r1 % 4 (using bitwise AND with 3)
+    cmp r3, 1           ; check if we are in a losing position (r1 % 4 == 1)
+    je losing
+
+    ; Winning position: take (r1 - 1) % 4 cards
+    sub r2, r1, 1       ; r2 = r1 - 1
+    and r2, r2, 3       ; r2 = (r1 - 1) % 4
+    out r2              ; output the move
+    jmp start           ; opponent reacts, read new number of cards
+
+losing:
+    ; Losing position: take 1 card (any legal move works, but 1 is safe)
+    mov r2, 1
+    out r2
+    jmp start
+
+end:
+    nop
+    jmp end             ; infinite loop to terminate cleanly
+</code></pre>
+<h3>What the programs prove</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Program</th>
+<th>Proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hanoi</td>
+<td>Working call/ret + stack + recursion on a hand-built CPU</td>
+</tr>
+<tr>
+<td>RNG</td>
+<td>Persistent memory (<code>pload</code>/<code>pstore</code>) + a real PRNG algorithm (xorshift)</td>
+</tr>
+<tr>
+<td>Capitalizer</td>
+<td>Bit-level ASCII manipulation (<code>xor</code> with <code>0b00100000</code>) + state machine</td>
+</tr>
+<tr>
+<td>Sorting</td>
+<td>In-memory data processing, addressing modes, unsigned comparisons</td>
+</tr>
+<tr>
+<td>Nim</td>
+<td>Game-theory strategy encoded in simple arithmetic (mod-4 via bitwise AND)</td>
+</tr>
+</tbody>
+</table></div>
+          <p class="footer-meta" style="margin-top:2rem" data-ru="Вопрос по документу или нужен разбор кода — напишите." data-en="Questions about the document, or you want a code walkthrough — get in touch.">Вопрос по документу или нужен разбор кода — напишите.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="contact.html" data-ru="написать" data-en="get in touch"><span data-ru="написать" data-en="get in touch">написать</span></a>
+            <a class="btn" href="projects.html" data-ru="все кейсы" data-en="all cases"><span data-ru="все кейсы" data-en="all cases">все кейсы</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <p class="brand-name" style="margin:0 0 .5rem">Ms<b>Binary</b>Lily</p>
+      <p class="footer-meta" data-ru="Лилия Гринина · Тамбов, Россия · UTC+3" data-en="Lilia Grinina · Tambov, Russia · UTC+3">Лилия Гринина · Тамбов, Россия · UTC+3</p>
+      <div class="footer-links" style="margin-top:.9rem">
+        <a href="https://t.me/MsBinaryLily" rel="noopener noreferrer" target="_blank">Telegram</a>
+        <a href="https://github.com/IonShieldQuad" rel="noopener noreferrer" target="_blank">GitHub</a>
+        <a href="contact.html" data-ru="контакты" data-en="contact">контакты</a>
+      </div>
+    </div>
+    <p class="footer-meta" data-ru="© 2026 Лилия Гринина · сайт собран вручную" data-en="© 2026 Lilia Grinina · hand-built">© 2026 Лилия Гринина · сайт собран вручную</p>
+  </div>
+</footer>
+
+<script src="data/cases.js"></script>
+<script src="js/ambient.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>
