@@ -664,7 +664,9 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
   letter-spacing: 0.02em; color: var(--ink-dim); max-width: 76ch;
 }
 @media (min-width: 900px) {
-  .case-gallery { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  /* two per row at desktop, never three: a screenshot under ~400px wide stops
+     being readable, and the point of the gallery is that a reader can look at it */
+  .case-gallery { grid-template-columns: repeat(auto-fit, minmax(430px, 1fr)); }
   /* one figure alone must not stretch to 1180px: a 1280px capture stays readable
      at its own width instead of being upscaled */
   .case-figure:only-child { max-width: 900px; }
