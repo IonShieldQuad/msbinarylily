@@ -386,7 +386,7 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     const shot = path.join(OUT, `${name}.png`);
     await page.screenshot({ path: shot, fullPage: false });
 
-    if (['index', 'case-tg', 'projects'].includes(name)) {
+    if (['index', 'case-tg', 'projects', 'services', 'contact'].includes(name)) {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.waitForTimeout(400);
       await page.screenshot({ path: path.join(OUT, `${name}-mobile.png`), fullPage: false });
@@ -469,6 +469,49 @@ const NAV = ['index.html', 'projects.html', 'services.html', 'laboratory.html', 
     }
   }
   if (!navConsistent) failures.push('nav is not identical on every page');
+
+  /* Prices are repeated on purpose — once in the strip under the services lede, once
+     on each package card, once in the teaser on the index — so the acceptance rule is
+     "the figures agree everywhere they appear", not "a figure appears once". Read
+     every span.price-num[data-price] out of both files, and refuse any ₽ that escaped
+     such a span: a price in prose is exactly how the old notice drifted to a figure
+     no package carried. */
+  const priceMap = (rel) => {
+    const html = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    const amounts = {};
+    for (const m of html.matchAll(/<span class="price-num" data-price="([^"]+)">([^<]+)<\/span>/g)) {
+      const key = m[1], amount = m[2].trim();
+      amounts[key] = [...new Set([...(amounts[key] || []), amount])];
+    }
+    const stripped = html.replace(/<span class="price-num" data-price="[^"]+">[^<]+<\/span>/g, '');
+    return {
+      amounts,
+      figures: (html.match(/class="price-num"/g) || []).length,
+      froms: (html.match(/class="price-from"/g) || []).length,
+      leftovers: (stripped.match(/₽/g) || []).length,
+    };
+  };
+  const priceSurfaces = { 'services.html': priceMap('services.html'), 'index.html': priceMap('index.html') };
+  const offeredKeys = Object.keys(priceSurfaces['services.html'].amounts);
+  if (offeredKeys.length < 2) failures.push(`services.html prices ${offeredKeys.length} package(s) — at least 2 expected`);
+  for (const [rel, p] of Object.entries(priceSurfaces)) {
+    if (p.leftovers) failures.push(`${rel}: ${p.leftovers} ₽ figure(s) outside a data-price span`);
+    if (p.froms !== p.figures) failures.push(`${rel}: ${p.figures} price(s) but ${p.froms} "от"/"from" labels`);
+    for (const [key, vals] of Object.entries(p.amounts)) {
+      if (vals.length > 1) failures.push(`${rel}: the "${key}" package is quoted as ${j(vals)} on the same page`);
+      if (!/^\d{1,3}( \d{3})* ₽$/.test(vals[0])) failures.push(`${rel}: price "${key}" is not a "N ₽" figure — ${j(vals[0])}`);
+    }
+  }
+  for (const key of offeredKeys) {
+    const a = priceSurfaces['services.html'].amounts[key][0];
+    const b = (priceSurfaces['index.html'].amounts[key] || [])[0];
+    if (b === undefined) failures.push(`index.html does not quote the "${key}" package`);
+    else if (b !== a) failures.push(`price "${key}" disagrees: services.html ${j(a)} vs index.html ${j(b)}`);
+  }
+  for (const key of Object.keys(priceSurfaces['index.html'].amounts)) {
+    if (!offeredKeys.includes(key)) failures.push(`index.html quotes a "${key}" package services.html does not offer`);
+  }
+
 
   // the icon files must exist on disk, since a 404 favicon is silent in a browser
   for (const f of ['assets/emblem.svg', 'assets/favicon-16.png', 'assets/favicon-32.png',

@@ -493,6 +493,85 @@ h1.page-title { font-size: var(--step-h2); letter-spacing: -0.01em; }
   border: 1px solid var(--hot); padding: 0.2rem 0.45rem;
 }
 
+/* Price: on the services cards the number is the message, so it takes the display
+   face at heading scale and the accent step that clears 4.5:1 on the card fill
+   (--accent is only 3.62:1 on --panel, so a figure never uses it as text).
+   One markup for the services page and the teaser on index.html: data-price names
+   the package, and verify.cjs compares the two pages on it. */
+.price-line { display: flex; align-items: baseline; gap: 0.4rem; margin: 0.1rem 0 0; }
+.price-from {
+  font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-dim);
+}
+.price-num {
+  font-family: var(--font-display); font-size: 1.45rem; font-weight: 600;
+  letter-spacing: -0.01em; color: var(--accent-ink);
+}
+.section-carbon .price-from { color: var(--text-on-dark-dim); }
+.section-carbon .price-num { color: var(--accent-bright); }
+
+/* who the package suits: a labelled line rather than a bullet, because it is the
+   thing  "does this page describe me"  is actually answered from */
+.card-fit { display: grid; gap: 0.2rem; }
+.card-fit-label {
+  font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-dim);
+}
+
+/* the explicit exclusions live in the same card as the price, above the next step,
+   so "what am I not buying" never needs a second page */
+.card-scope {
+  font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.5;
+  color: var(--ink-dim); border-top: 1px solid var(--line); padding-top: 0.6rem;
+}
+
+/* the per-package next step: a text link, 44px tall so it is as tappable as a
+   button while leaving the single primary action to the block below the cards */
+.card-cta {
+  display: inline-flex; align-items: center; min-height: 44px;
+  font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.08em;
+  text-transform: uppercase; text-decoration: none; color: var(--accent-ink);
+}
+.card-cta:hover { color: var(--accent-deep); text-decoration: underline; text-underline-offset: 3px; }
+
+/* the includes list keeps one rhythm across all three packages */
+.card .plain-list { gap: 0.4rem; font-size: 0.92rem; }
+
+/* the price strip under the lede: a client who never scrolls still learns the three
+   package prices, and each one jumps to its card. Same data-price spans as the
+   cards, so the harness can prove the two never disagree. */
+.price-strip {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.4rem 1.1rem; margin: 1.2rem 0 0;
+  font-family: var(--font-mono); font-size: 0.85rem;
+}
+.price-strip-label {
+  font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.price-strip-item {
+  display: inline-flex; align-items: baseline; gap: 0.35rem;
+  text-decoration: none; color: var(--ink-dim);
+  border-bottom: 1px solid var(--line); padding-bottom: 0.15rem;
+}
+.price-strip-item:hover { color: var(--accent-ink); border-bottom-color: var(--accent); }
+.price-strip .price-num { font-size: 1.05rem; }
+
+/* on a phone the strip is a price list, not a row: three packages side by side do
+   not fit, and a wrapped flex row reads as a broken sentence. Name on the left,
+   "от" and the figure on the right. */
+@media (max-width: 639px) {
+  .price-strip { display: grid; grid-template-columns: 1fr; gap: 0.25rem; margin-top: 0.9rem; }
+  .price-strip .price-num { font-size: 1rem; }
+  .price-strip-item { padding-bottom: 0.2rem; }
+  .price-strip-item { display: grid; grid-template-columns: 1fr auto auto; gap: 0.35rem; align-items: baseline; }
+}
+
+.section-carbon .card { --ring-color: var(--line-dark); --ring-surface: var(--carbon-2); color: var(--text-on-dark); }
+.section-carbon .card-hex { color: var(--text-on-dark-dim); }
+.section-carbon .card p { color: var(--text-on-dark-dim); }
+.section-carbon .card-flag { color: var(--hot); }
+
 .section-carbon .card { --ring-color: var(--line-dark); --ring-surface: var(--carbon-2); color: var(--text-on-dark); }
 .section-carbon .card-hex { color: var(--text-on-dark-dim); }
 .section-carbon .card p { color: var(--text-on-dark-dim); }
